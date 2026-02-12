@@ -1,0 +1,2072 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APP Media Intelligence</title>
+<meta name="description" content="Ferramenta de Inteligência de Mídia com análise IA para profissionais de comunicação">
+<meta name="theme-color" content="#07080f">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07080f;
+    --bg2: #0d0f1a;
+    --bg3: #13162a;
+    --bg4: #1a1e35;
+    --border: rgba(255,255,255,0.07);
+    --border-active: rgba(99,179,237,0.35);
+    --accent: #63b3ed;
+    --accent2: #f6ad55;
+    --accent3: #68d391;
+    --accent-neg: #fc8181;
+    --text: #e8ecf5;
+    --text2: #8892ab;
+    --text3: #4a5270;
+    --glow: rgba(99,179,237,0.15);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'DM Sans',sans-serif;
+    font-weight:300;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  /* GRID BACKGROUND */
+  body::before{
+    content:'';
+    position:fixed;top:0;left:0;right:0;bottom:0;
+    background-image:
+      linear-gradient(rgba(99,179,237,0.025) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(99,179,237,0.025) 1px,transparent 1px);
+    background-size:48px 48px;
+    pointer-events:none;z-index:0;
+  }
+  /* SIDEBAR */
+  .sidebar{
+    position:fixed;left:0;top:0;bottom:0;width:260px;
+    background:var(--bg2);
+    border-right:1px solid var(--border);
+    display:flex;flex-direction:column;
+    z-index:100;
+    padding:0;
+  }
+  .sidebar-logo{
+    padding:28px 24px 20px;
+    border-bottom:1px solid var(--border);
+  }
+  .logo-tag{
+    font-size:9px;letter-spacing:0.3em;text-transform:uppercase;
+    color:var(--accent);font-family:'Syne',sans-serif;font-weight:600;
+    margin-bottom:6px;
+  }
+  .logo-title{
+    font-family:'Syne',sans-serif;font-weight:800;font-size:18px;
+    line-height:1.1;color:var(--text);
+  }
+  .logo-title span{color:var(--accent);}
+  .sidebar-section{
+    padding:20px 16px 8px;
+  }
+  .sidebar-section-label{
+    font-size:9px;letter-spacing:0.25em;text-transform:uppercase;
+    color:var(--text3);font-weight:500;margin-bottom:8px;padding:0 8px;
+  }
+  .sidebar-nav-item{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 12px;border-radius:8px;cursor:pointer;
+    transition:all .2s;font-size:13.5px;color:var(--text2);
+    position:relative;
+  }
+  .sidebar-nav-item:hover{background:var(--bg3);color:var(--text);}
+  .sidebar-nav-item.active{background:var(--bg3);color:var(--accent);}
+  .sidebar-nav-item.active::before{
+    content:'';position:absolute;left:0;top:20%;bottom:20%;
+    width:3px;border-radius:0 2px 2px 0;background:var(--accent);
+  }
+  .nav-icon{font-size:15px;width:20px;text-align:center;}
+  /* STATUS BADGE */
+  .status-badge{
+    margin:auto 16px 16px;
+    padding:10px 14px;border-radius:8px;
+    background:var(--bg3);border:1px solid var(--border);
+    font-size:12px;
+  }
+  .status-dot{
+    width:6px;height:6px;border-radius:50%;
+    background:#fc8181;display:inline-block;margin-right:6px;
+  }
+  .status-dot.on{background:#68d391;box-shadow:0 0 6px rgba(104,211,145,.5);}
+  /* MAIN */
+  .main{
+    margin-left:260px;min-height:100vh;
+    display:flex;flex-direction:column;
+    position:relative;z-index:1;
+  }
+  /* TOPBAR */
+  .topbar{
+    height:64px;border-bottom:1px solid var(--border);
+    background:rgba(7,8,15,0.8);backdrop-filter:blur(12px);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 32px;position:sticky;top:0;z-index:50;
+  }
+  .topbar-left{
+    display:flex;align-items:center;gap:12px;
+  }
+  .topbar-title{
+    font-family:'Syne',sans-serif;font-weight:700;font-size:16px;
+  }
+  .topbar-breadcrumb{
+    color:var(--text3);font-size:13px;
+  }
+  .topbar-right{
+    display:flex;align-items:center;gap:12px;
+  }
+  /* BUTTONS */
+  .btn{
+    display:inline-flex;align-items:center;gap:7px;
+    padding:9px 16px;border-radius:8px;
+    font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;
+    cursor:pointer;border:none;transition:all .2s;
+  }
+  .btn-primary{
+    background:var(--accent);color:#07080f;
+  }
+  .btn-primary:hover{background:#90cdf4;transform:translateY(-1px);}
+  .btn-secondary{
+    background:var(--bg3);color:var(--text2);border:1px solid var(--border);
+  }
+  .btn-secondary:hover{background:var(--bg4);color:var(--text);}
+  .btn-ghost{
+    background:transparent;color:var(--text2);border:1px solid var(--border);
+  }
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+  /* PAGE SECTIONS */
+  .page{display:none;padding:32px;}
+  .page.active{display:block;}
+  /* HERO - UPLOAD AREA */
+  .hero-area{
+    max-width:820px;margin:0 auto;padding:60px 0 40px;
+    text-align:center;
+  }
+  .hero-eyebrow{
+    font-size:11px;letter-spacing:0.3em;text-transform:uppercase;
+    color:var(--accent);font-family:'Syne',sans-serif;font-weight:600;
+    margin-bottom:16px;
+  }
+  .hero-h1{
+    font-family:'Syne',sans-serif;font-weight:800;
+    font-size:clamp(32px,4vw,52px);line-height:1.05;
+    margin-bottom:16px;
+  }
+  .hero-h1 em{font-style:normal;color:var(--accent);}
+  .hero-sub{
+    color:var(--text2);font-size:15px;line-height:1.7;max-width:560px;margin:0 auto 36px;
+  }
+  /* UPLOAD ZONE */
+  .upload-zone{
+    border:1.5px dashed var(--border);
+    border-radius:16px;background:var(--bg2);
+    padding:48px 32px;cursor:pointer;
+    transition:all .3s;position:relative;overflow:hidden;
+  }
+  .upload-zone::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(ellipse at 50% 0%, rgba(99,179,237,0.06) 0%, transparent 60%);
+    pointer-events:none;
+  }
+  .upload-zone:hover,.upload-zone.drag{
+    border-color:var(--accent);
+    background:var(--bg3);
+    box-shadow:0 0 40px rgba(99,179,237,0.08);
+  }
+  .upload-icon{font-size:40px;margin-bottom:16px;}
+  .upload-title{font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:8px;}
+  .upload-sub{color:var(--text2);font-size:13px;}
+  .upload-sub strong{color:var(--accent2);}
+  #fileInput{display:none;}
+  /* LLM SELECTOR */
+  .llm-selector{
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    flex-wrap:wrap;margin-top:28px;
+  }
+  .llm-selector-label{
+    font-size:12px;color:var(--text3);text-transform:uppercase;
+    letter-spacing:0.15em;margin-right:4px;
+  }
+  .llm-btn{
+    padding:8px 16px;border-radius:6px;font-size:12px;font-weight:500;
+    border:1px solid var(--border);background:var(--bg3);
+    color:var(--text2);cursor:pointer;transition:all .2s;
+    display:flex;align-items:center;gap:6px;
+  }
+  .llm-btn:hover{border-color:var(--border-active);color:var(--text);}
+  .llm-btn.selected{
+    border-color:var(--accent);color:var(--accent);
+    background:rgba(99,179,237,0.08);
+  }
+  .llm-dot{width:6px;height:6px;border-radius:50%;}
+  /* FILE INFO */
+  .file-info{
+    display:none;
+    background:var(--bg3);border:1px solid var(--border-active);
+    border-radius:12px;padding:16px 20px;
+    margin-top:16px;text-align:left;
+  }
+  .file-info.show{display:flex;align-items:center;gap:14px;}
+  .file-info-icon{font-size:28px;}
+  .file-info-name{font-weight:500;font-size:14px;margin-bottom:3px;}
+  .file-info-meta{font-size:12px;color:var(--text2);}
+  .file-info-meta span{color:var(--accent3);margin-right:12px;}
+  /* CARDS GRID */
+  .stats-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:16px;margin-bottom:28px;
+  }
+  .stat-card{
+    background:var(--bg2);border:1px solid var(--border);
+    border-radius:12px;padding:20px;
+    position:relative;overflow:hidden;
+    transition:all .25s;
+  }
+  .stat-card:hover{border-color:var(--border-active);transform:translateY(-2px);}
+  .stat-card::after{
+    content:'';position:absolute;top:0;right:0;
+    width:80px;height:80px;
+    background:radial-gradient(circle,var(--card-glow,rgba(99,179,237,.08)) 0%,transparent 70%);
+  }
+  .stat-card-label{font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:var(--text3);margin-bottom:10px;}
+  .stat-card-value{font-family:'Syne',sans-serif;font-weight:800;font-size:30px;line-height:1;}
+  .stat-card-sub{font-size:12px;color:var(--text2);margin-top:6px;}
+  .stat-card-delta{
+    display:inline-flex;align-items:center;gap:4px;
+    font-size:12px;padding:2px 8px;border-radius:20px;
+    margin-top:6px;
+  }
+  .delta-pos{background:rgba(104,211,145,.12);color:#68d391;}
+  .delta-neg{background:rgba(252,129,129,.12);color:#fc8181;}
+  /* CHART CONTAINERS */
+  .charts-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
+    gap:20px;margin-bottom:28px;
+  }
+  .chart-card{
+    background:var(--bg2);border:1px solid var(--border);
+    border-radius:14px;padding:22px;
+  }
+  .chart-card-header{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:18px;
+  }
+  .chart-card-title{
+    font-family:'Syne',sans-serif;font-weight:700;font-size:14px;
+  }
+  .chart-card-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+  .chart-wrap{position:relative;height:200px;}
+  /* CHAT PAGE */
+  .chat-layout{
+    display:grid;grid-template-columns:1fr 400px;
+    gap:20px;height:calc(100vh - 64px - 64px);
+  }
+  .chat-main{
+    background:var(--bg2);border:1px solid var(--border);
+    border-radius:14px;display:flex;flex-direction:column;
+    overflow:hidden;
+  }
+  .chat-header{
+    padding:16px 20px;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;gap:12px;
+  }
+  .chat-header-avatar{
+    width:36px;height:36px;border-radius:8px;
+    background:linear-gradient(135deg,#63b3ed,#9f7aea);
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;
+  }
+  .chat-messages{
+    flex:1;overflow-y:auto;padding:20px;
+    display:flex;flex-direction:column;gap:16px;
+  }
+  .chat-messages::-webkit-scrollbar{width:4px;}
+  .chat-messages::-webkit-scrollbar-track{background:transparent;}
+  .chat-messages::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px;}
+  .msg{max-width:85%;animation:fadeUp .3s ease;}
+  .msg-user{align-self:flex-end;}
+  .msg-ai{align-self:flex-start;}
+  .msg-bubble{
+    padding:12px 16px;border-radius:12px;
+    font-size:14px;line-height:1.6;
+  }
+  .msg-user .msg-bubble{
+    background:var(--accent);color:#07080f;
+    border-radius:12px 12px 2px 12px;
+  }
+  .msg-ai .msg-bubble{
+    background:var(--bg3);border:1px solid var(--border);
+    border-radius:12px 12px 12px 2px;
+  }
+  .msg-meta{
+    font-size:11px;color:var(--text3);margin-top:5px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .msg-user .msg-meta{justify-content:flex-end;}
+  .msg-chart{
+    margin-top:12px;
+    background:var(--bg2);border:1px solid var(--border);
+    border-radius:10px;padding:16px;
+  }
+  .msg-chart-title{
+    font-size:12px;font-weight:500;color:var(--text2);
+    margin-bottom:10px;text-transform:uppercase;letter-spacing:0.1em;
+  }
+  .msg-analysis{
+    margin-top:10px;padding:12px 14px;
+    background:rgba(246,173,85,0.06);
+    border-left:2px solid var(--accent2);
+    border-radius:0 8px 8px 0;
+    font-size:13px;line-height:1.6;color:var(--text2);
+  }
+  .msg-analysis strong{color:var(--accent2);}
+  .msg-insights{margin-top:10px;}
+  .insight-item{
+    display:flex;align-items:flex-start;gap:8px;
+    font-size:12.5px;color:var(--text2);margin-bottom:6px;line-height:1.5;
+  }
+  .insight-bullet{
+    flex-shrink:0;width:18px;height:18px;border-radius:4px;
+    background:rgba(99,179,237,0.12);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    font-size:10px;margin-top:1px;
+  }
+  /* CHAT INPUT */
+  .chat-input-area{
+    padding:16px 20px;border-top:1px solid var(--border);
+    background:var(--bg2);
+  }
+  .chat-input-row{
+    display:flex;gap:10px;align-items:flex-end;
+  }
+  .chat-textarea{
+    flex:1;background:var(--bg3);border:1px solid var(--border);
+    border-radius:10px;padding:12px 14px;
+    color:var(--text);font-family:'DM Sans',sans-serif;
+    font-size:14px;resize:none;outline:none;
+    transition:border-color .2s;min-height:44px;max-height:120px;
+  }
+  .chat-textarea:focus{border-color:var(--accent);}
+  .chat-textarea::placeholder{color:var(--text3);}
+  .chat-send-btn{
+    width:44px;height:44px;border-radius:10px;
+    background:var(--accent);border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;transition:all .2s;flex-shrink:0;
+  }
+  .chat-send-btn:hover{background:#90cdf4;transform:scale(1.05);}
+  .chat-send-btn:disabled{background:var(--bg4);cursor:not-allowed;}
+  /* QUICK QUESTIONS */
+  .quick-questions{
+    display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;
+  }
+  .quick-q{
+    padding:5px 10px;border-radius:6px;font-size:12px;
+    border:1px solid var(--border);background:var(--bg3);
+    color:var(--text2);cursor:pointer;transition:all .15s;
+  }
+  .quick-q:hover{border-color:var(--accent);color:var(--accent);}
+  /* RIGHT PANEL */
+  .chat-right{
+    display:flex;flex-direction:column;gap:16px;
+    overflow-y:auto;
+    padding-right:2px;
+  }
+  .chat-right::-webkit-scrollbar{width:4px;}
+  .chat-right::-webkit-scrollbar-thumb{background:var(--bg4);}
+  .panel-card{
+    background:var(--bg2);border:1px solid var(--border);
+    border-radius:14px;padding:18px;
+  }
+  .panel-title{
+    font-family:'Syne',sans-serif;font-weight:700;
+    font-size:13px;margin-bottom:14px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .panel-title::before{
+    content:'';width:3px;height:14px;
+    background:var(--accent);border-radius:2px;
+  }
+  /* MINI METRICS */
+  .mini-metric{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;
+  }
+  .mini-metric:last-child{border:none;}
+  .mini-metric-label{color:var(--text2);}
+  .mini-metric-val{
+    font-weight:500;font-family:'Syne',sans-serif;font-size:14px;
+  }
+  .tag{
+    display:inline-block;padding:2px 8px;border-radius:4px;
+    font-size:11px;font-weight:500;
+  }
+  .tag-pos{background:rgba(104,211,145,.12);color:#68d391;}
+  .tag-neg{background:rgba(252,129,129,.12);color:#fc8181;}
+  .tag-neu{background:rgba(99,179,237,.10);color:var(--accent);}
+  /* LOADING */
+  .loading-dots{
+    display:inline-flex;gap:4px;align-items:center;height:20px;
+  }
+  .loading-dots span{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--accent);animation:bounce .9s infinite;
+  }
+  .loading-dots span:nth-child(2){animation-delay:.15s;}
+  .loading-dots span:nth-child(3){animation-delay:.3s;}
+  /* EMPTY STATE */
+  .empty-state{
+    display:flex;flex-direction:column;align-items:center;
+    justify-content:center;height:100%;text-align:center;
+    padding:32px;
+  }
+  .empty-icon{font-size:48px;margin-bottom:16px;opacity:.4;}
+  .empty-title{font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:8px;}
+  .empty-sub{color:var(--text2);font-size:14px;line-height:1.6;max-width:340px;}
+  /* PLAYER FILTER */
+  .filter-pills{display:flex;flex-wrap:wrap;gap:6px;}
+  .filter-pill{
+    padding:4px 10px;border-radius:20px;font-size:12px;
+    border:1px solid var(--border);background:var(--bg3);
+    color:var(--text2);cursor:pointer;transition:all .15s;
+  }
+  .filter-pill:hover,.filter-pill.active{
+    border-color:var(--accent);color:var(--accent);
+    background:rgba(99,179,237,0.07);
+  }
+  /* ALERTS/TOAST */
+  .toast{
+    position:fixed;bottom:24px;right:24px;
+    background:var(--bg3);border:1px solid var(--border-active);
+    border-radius:10px;padding:14px 18px;
+    display:flex;align-items:center;gap:10px;
+    font-size:13px;z-index:9999;
+    transform:translateY(20px);opacity:0;
+    transition:all .3s;pointer-events:none;
+  }
+  .toast.show{transform:translateY(0);opacity:1;}
+  .toast-icon{font-size:18px;}
+  /* TABLE */
+  .data-table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+  .data-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .data-table th{
+    background:var(--bg3);padding:10px 14px;text-align:left;
+    font-size:11px;text-transform:uppercase;letter-spacing:0.1em;
+    color:var(--text3);font-weight:500;white-space:nowrap;
+  }
+  .data-table td{
+    padding:10px 14px;border-top:1px solid var(--border);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    max-width:160px;color:var(--text2);
+  }
+  .data-table tr:hover td{background:var(--bg3);color:var(--text);}
+  /* ANIMATIONS */
+  @keyframes fadeUp{
+    from{opacity:0;transform:translateY(10px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  @keyframes bounce{
+    0%,100%{transform:translateY(0);}
+    50%{transform:translateY(-5px);}
+  }
+  @keyframes spin{
+    to{transform:rotate(360deg);}
+  }
+  .spinner{
+    width:16px;height:16px;border:2px solid var(--bg4);
+    border-top-color:var(--accent);border-radius:50%;
+    animation:spin .7s linear infinite;display:inline-block;
+  }
+  /* RESPONSIVE */
+  @media(max-width:900px){
+    .sidebar{width:64px;}
+    .sidebar .logo-tag,.sidebar .logo-title span:not(:first-child),
+    .sidebar-section-label,.nav-label,.sidebar-nav-item span,
+    .status-badge p,.status-badge{display:none;}
+    .sidebar-nav-item{justify-content:center;padding:12px;}
+    .main{margin-left:64px;}
+    .chat-layout{grid-template-columns:1fr;}
+    .chat-right{display:none;}
+  }
+  /* TIER BARS */
+  .tier-bar{
+    display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;
+  }
+  .tier-bar-label{width:48px;color:var(--text2);}
+  .tier-bar-track{flex:1;background:var(--bg4);border-radius:2px;height:6px;}
+  .tier-bar-fill{height:6px;border-radius:2px;transition:width .5s ease;}
+  .tier-bar-val{width:28px;text-align:right;font-size:11px;color:var(--text3);}
+  /* RPS GAUGE */
+  .rps-gauge{
+    display:flex;align-items:center;gap:16px;
+  }
+  .rps-circle{
+    width:72px;height:72px;border-radius:50%;
+    background:conic-gradient(var(--accent) var(--pct,0%), var(--bg4) 0%);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;flex-shrink:0;
+  }
+  .rps-circle-inner{
+    width:54px;height:54px;border-radius:50%;
+    background:var(--bg2);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+  }
+  .rps-number{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;}
+  .rps-label{font-size:9px;color:var(--text3);}
+  /* PAGE TRANSITION */
+  .page{animation:fadeUp .25s ease;}
+  /* DROPDOWN */
+  .dropdown{position:relative;display:inline-block;}
+  .dropdown-menu{
+    display:none;position:absolute;top:calc(100% + 6px);right:0;
+    background:var(--bg3);border:1px solid var(--border);
+    border-radius:10px;min-width:160px;z-index:200;
+    overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,.4);
+  }
+  .dropdown.open .dropdown-menu{display:block;}
+  .dropdown-item{
+    padding:10px 14px;font-size:13px;cursor:pointer;
+    transition:background .15s;display:flex;align-items:center;gap:8px;
+  }
+  .dropdown-item:hover{background:var(--bg4);}
+  /* API KEY MODAL */
+  .modal-overlay{
+    display:none;position:fixed;inset:0;
+    background:rgba(0,0,0,.7);z-index:1000;
+    align-items:center;justify-content:center;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal{
+    background:var(--bg2);border:1px solid var(--border);
+    border-radius:16px;padding:32px;width:480px;max-width:90vw;
+    animation:fadeUp .25s ease;
+  }
+  .modal-title{
+    font-family:'Syne',sans-serif;font-weight:800;
+    font-size:20px;margin-bottom:6px;
+  }
+  .modal-sub{color:var(--text2);font-size:13px;margin-bottom:24px;line-height:1.6;}
+  .input-group{margin-bottom:16px;}
+  .input-label{font-size:12px;color:var(--text2);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:0.1em;}
+  .input-field{
+    width:100%;background:var(--bg3);border:1px solid var(--border);
+    border-radius:8px;padding:10px 12px;color:var(--text);
+    font-family:'DM Sans',sans-serif;font-size:13px;outline:none;
+    transition:border-color .2s;
+  }
+  .input-field:focus{border-color:var(--accent);}
+  .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;}
+  /* SECTION HEADER */
+  .section-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:20px;
+  }
+  .section-title{
+    font-family:'Syne',sans-serif;font-weight:800;font-size:22px;
+  }
+  .section-sub{font-size:13px;color:var(--text2);margin-top:3px;}
+  /* NOTIFICATION DOT */
+  .notif-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--accent2);position:absolute;top:8px;right:8px;
+  }
+  /* SCROLL AREA */
+  .scroll-area{overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--bg4) transparent;}
+  .scroll-area::-webkit-scrollbar{width:4px;}
+  .scroll-area::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-tag">Ferramenta Pro</div>
+    <div class="logo-title">APP <span>Media</span><br>Intelligence</div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Menu</div>
+    <div class="sidebar-nav-item active" onclick="showPage('upload')">
+      <span class="nav-icon">⬆</span>
+      <span class="nav-label">Importar Dados</span>
+    </div>
+    <div class="sidebar-nav-item" onclick="showPage('dashboard')" id="nav-dashboard">
+      <span class="nav-icon">◼</span>
+      <span class="nav-label">Dashboard</span>
+    </div>
+    <div class="sidebar-nav-item" onclick="showPage('chat')" id="nav-chat">
+      <span class="nav-icon">💬</span>
+      <span class="nav-label">Chat IA</span>
+    </div>
+    <div class="sidebar-nav-item" onclick="showPage('data')" id="nav-data">
+      <span class="nav-icon">⊞</span>
+      <span class="nav-label">Base de Dados</span>
+    </div>
+  </div>
+
+  <div style="margin-top:auto;padding:16px;">
+    <div class="status-badge">
+      <p style="font-size:11px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.1em;">Status</p>
+      <div style="display:flex;align-items:center;font-size:12px;">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Sem dados</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;" id="statusModel">LLM: Não selecionado</div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-title" id="pageTitle">Importar Dados</span>
+      <span class="topbar-breadcrumb" id="pageBreadcrumb">↗ Upload da planilha Excel</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-secondary" onclick="openApiModal()">🔑 API Keys</button>
+      <div id="envBadge" style="display:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:500;letter-spacing:.05em;"></div>
+      <div class="dropdown" id="llmDropdown">
+        <button class="btn btn-ghost" onclick="toggleDropdown()">
+          <span id="selectedLlmLabel">⚡ Selecionar LLM</span> ▾
+        </button>
+        <div class="dropdown-menu">
+          <div class="dropdown-item" onclick="selectLlm('openai','🟢','OpenAI GPT-4')"><span style="color:#10a37f">🟢</span> OpenAI GPT-4</div>
+          <div class="dropdown-item" onclick="selectLlm('deepseek','🔵','DeepSeek')"><span style="color:#4361ee">🔵</span> DeepSeek</div>
+          <div class="dropdown-item" onclick="selectLlm('claude','🟠','Claude Sonnet')"><span style="color:#e07b39">🟠</span> Claude Sonnet</div>
+          <div class="dropdown-item" onclick="selectLlm('grok','⚫','Grok xAI')"><span style="color:#fff">⚫</span> Grok xAI</div>
+          <div class="dropdown-item" onclick="selectLlm('qwen','🟣','Qwen Alibaba')"><span style="color:#9b59b6">🟣</span> Qwen Alibaba</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: UPLOAD -->
+  <div class="page active" id="page-upload">
+    <div class="hero-area">
+      <div class="hero-eyebrow">Plataforma de Inteligência de Mídia</div>
+      <h1 class="hero-h1">Transforme dados de mídia<br>em <em>insights estratégicos</em></h1>
+      <p class="hero-sub">Importe sua planilha de clipping classificada, selecione o modelo de IA e comece a fazer perguntas em linguagem natural sobre sua cobertura de mídia.</p>
+
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" ondragover="handleDrag(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" onchange="handleFile(event)">
+        <div class="upload-icon">📊</div>
+        <div class="upload-title">Arraste ou clique para importar</div>
+        <div class="upload-sub">Suporta arquivos <strong>Excel (.xlsx / .xls)</strong> e <strong>CSV</strong></div>
+        <div style="margin-top:16px;">
+          <button class="btn btn-primary" onclick="event.stopPropagation();">
+            📁 Escolher Arquivo
+          </button>
+        </div>
+      </div>
+
+      <div class="file-info" id="fileInfo">
+        <div class="file-info-icon">✅</div>
+        <div style="flex:1">
+          <div class="file-info-name" id="fileName">—</div>
+          <div class="file-info-meta">
+            <span id="fileRows">—</span>
+            <span id="fileSize">—</span>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="goToAnalysis()">Analisar →</button>
+      </div>
+
+      <div class="llm-selector">
+        <span class="llm-selector-label">LLM:</span>
+        <button class="llm-btn" onclick="selectLlmBtn(this,'openai','OpenAI GPT-4')" id="llm-openai">
+          <span class="llm-dot" style="background:#10a37f"></span>OpenAI GPT-4
+        </button>
+        <button class="llm-btn" onclick="selectLlmBtn(this,'deepseek','DeepSeek')" id="llm-deepseek">
+          <span class="llm-dot" style="background:#4361ee"></span>DeepSeek
+        </button>
+        <button class="llm-btn selected" onclick="selectLlmBtn(this,'claude','Claude Sonnet')" id="llm-claude">
+          <span class="llm-dot" style="background:#e07b39"></span>Claude
+        </button>
+        <button class="llm-btn" onclick="selectLlmBtn(this,'grok','Grok xAI')" id="llm-grok">
+          <span class="llm-dot" style="background:#888"></span>Grok
+        </button>
+        <button class="llm-btn" onclick="selectLlmBtn(this,'qwen','Qwen')" id="llm-qwen">
+          <span class="llm-dot" style="background:#9b59b6"></span>Qwen
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: DASHBOARD -->
+  <div class="page" id="page-dashboard">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Dashboard</div>
+        <div class="section-sub" id="dashboardPeriod">Visão geral da cobertura de mídia</div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <select class="input-field" id="playerFilter" onchange="renderDashboard()" style="width:160px;padding:8px 12px;">
+          <option value="">Todos os Players</option>
+        </select>
+        <button class="btn btn-secondary" onclick="showPage('chat')">💬 Chat IA →</button>
+      </div>
+    </div>
+
+    <!-- STATS GRID -->
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <!-- CHARTS GRID -->
+    <div class="charts-grid" id="chartsGrid"></div>
+
+    <!-- BOTTOM ROW -->
+    <div class="charts-grid" id="chartsGrid2"></div>
+  </div>
+
+  <!-- PAGE: CHAT -->
+  <div class="page" id="page-chat" style="padding-bottom:0;height:calc(100vh - 64px)">
+    <div class="chat-layout">
+      <div class="chat-main">
+        <div class="chat-header">
+          <div class="chat-header-avatar">🤖</div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;">Analista IA</div>
+            <div style="font-size:11px;color:var(--text3);" id="chatModelLabel">Modelo: não selecionado</div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:8px;">
+            <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;" onclick="clearChat()">🗑 Limpar</button>
+          </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+          <div class="empty-state" id="chatEmpty">
+            <div class="empty-icon">🧠</div>
+            <div class="empty-title">Analista de Mídia IA</div>
+            <div class="empty-sub">Faça perguntas sobre sua cobertura de mídia. Vou analisar os dados, gerar gráficos e sugerir ações estratégicas.</div>
+          </div>
+        </div>
+
+        <div class="chat-input-area">
+          <div class="quick-questions" id="quickQuestions">
+            <div class="quick-q" onclick="useQuickQ(this)">📋 Resumo geral</div>
+            <div class="quick-q" onclick="useQuickQ(this)">😊 Sentimento por player</div>
+            <div class="quick-q" onclick="useQuickQ(this)">📈 RPS por player</div>
+            <div class="quick-q" onclick="useQuickQ(this)">📰 Top veículos</div>
+            <div class="quick-q" onclick="useQuickQ(this)">📅 Evolução temporal</div>
+            <div class="quick-q" onclick="useQuickQ(this)">💰 AVE total</div>
+            <div class="quick-q" onclick="useQuickQ(this)">🎯 Protagonismo</div>
+            <div class="quick-q" onclick="useQuickQ(this)">🏷️ Temas abordados</div>
+            <div class="quick-q" onclick="useQuickQ(this)">🧭 Motivação das notícias</div>
+            <div class="quick-q" onclick="useQuickQ(this)">🎙️ Porta-vozes</div>
+            <div class="quick-q" onclick="useQuickQ(this)">🏅 Distribuição por Tier</div>
+            <div class="quick-q" onclick="useQuickQ(this)">✍️ Jornalistas ativos</div>
+          </div>
+          <div class="chat-input-row">
+            <textarea class="chat-textarea" id="chatInput" placeholder="Ex: Qual o sentimento médio do Bradesco nos últimos 30 dias?" rows="1" onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
+            <button class="chat-send-btn" id="sendBtn" onclick="sendMessage()" title="Enviar">➤</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="chat-right">
+        <div class="panel-card">
+          <div class="panel-title">Resumo da Base</div>
+          <div id="panelSummary">
+            <div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">
+              Importe dados para ver o resumo
+            </div>
+          </div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-title">Players</div>
+          <div class="filter-pills" id="panelPlayers">
+            <span style="color:var(--text3);font-size:12px;">Nenhum dado carregado</span>
+          </div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-title">Métricas Rápidas</div>
+          <div id="panelMetrics">
+            <div style="text-align:center;padding:16px;color:var(--text3);font-size:12px;">Aguardando dados...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: DATA -->
+  <div class="page" id="page-data">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Base de Dados</div>
+        <div class="section-sub" id="dataTableInfo">Visualização das notícias importadas</div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <input type="text" class="input-field" placeholder="🔍 Buscar..." id="tableSearch" oninput="filterTable()" style="width:200px;padding:8px 12px;">
+      </div>
+    </div>
+    <div class="data-table-wrap">
+      <table class="data-table" id="dataTable">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div style="padding:12px 0;font-size:12px;color:var(--text3);" id="tableFooter"></div>
+  </div>
+</div>
+
+<!-- MODAL: API KEYS -->
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <div class="modal-title">🔑 Configurar API Keys</div>
+    <div class="modal-sub">As chaves são salvas apenas no <strong>localStorage</strong> do seu navegador — nunca enviadas a terceiros além da API selecionada.</div>
+    <div id="modal-env-note" style="margin-bottom:16px;padding:10px 14px;border-radius:8px;font-size:12.5px;line-height:1.6;"></div>
+    <div class="input-group">
+      <label class="input-label">OpenAI API Key <span style="color:var(--accent3);font-size:10px;">✅ Funciona no GitHub Pages</span></label>
+      <input type="password" class="input-field" id="key-openai" placeholder="sk-...">
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;">Obter em: <a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--accent)">platform.openai.com/api-keys</a> · Modelo: gpt-4o-mini</div>
+    </div>
+    <div class="input-group">
+      <label class="input-label">DeepSeek API Key <span style="color:var(--accent3);font-size:10px;">✅ Funciona no GitHub Pages</span></label>
+      <input type="password" class="input-field" id="key-deepseek" placeholder="sk-...">
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;">Obter em: <a href="https://platform.deepseek.com/api_keys" target="_blank" style="color:var(--accent)">platform.deepseek.com</a> · Modelo: deepseek-chat</div>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Anthropic (Claude) API Key <span style="color:var(--accent3);font-size:10px;">✅ Funciona no GitHub Pages</span></label>
+      <input type="password" class="input-field" id="key-claude" placeholder="sk-ant-...">
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;">Obter em: <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--accent)">console.anthropic.com</a> · Modelo: claude-sonnet-4-5</div>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Grok (xAI) API Key <span style="color:var(--accent3);font-size:10px;">✅ Funciona no GitHub Pages</span></label>
+      <input type="password" class="input-field" id="key-grok" placeholder="xai-...">
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;">Obter em: <a href="https://console.x.ai" target="_blank" style="color:var(--accent)">console.x.ai</a> · Modelo: grok-3-mini</div>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Qwen (Alibaba) API Key <span style="color:var(--accent2);font-size:10px;">⚠️ CORS variável</span></label>
+      <input type="password" class="input-field" id="key-qwen" placeholder="sk-...">
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;">Obter em: <a href="https://dashscope.aliyuncs.com" target="_blank" style="color:var(--accent)">dashscope.aliyuncs.com</a> · Modelo: qwen-plus</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeApiModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveApiKeys()">💾 Salvar Chaves</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toastIcon">✅</span>
+  <span id="toastMsg">Arquivo carregado com sucesso!</span>
+</div>
+
+<script>
+// ─── APP STATE ──────────────────────────────────────────────────────────────
+const state = {
+  rawData: [],
+  headers: [],
+  selectedLlm: 'claude',
+  selectedLlmName: 'Claude Sonnet',
+  apiKeys: {},
+  charts: {},
+  chatHistory: [],
+  selectedPlayer: '',
+  currentPage: 'upload'
+};
+
+// Cleanup all charts
+function destroyCharts(){
+  Object.values(state.charts).forEach(c=>{try{c.destroy();}catch(e){}});
+  state.charts={};
+}
+
+// ─── PAGE NAV ────────────────────────────────────────────────────────────────
+function showPage(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  const nav = document.getElementById('nav-'+page);
+  if(nav) nav.classList.add('active');
+  else document.querySelectorAll('.sidebar-nav-item')[0].classList.add('active');
+  state.currentPage = page;
+  const titles = {upload:'Importar Dados',dashboard:'Dashboard',chat:'Chat IA',data:'Base de Dados'};
+  const subs = {upload:'Upload da planilha Excel',dashboard:'Visão geral e métricas',chat:'Análise em linguagem natural',data:'Tabela de notícias'};
+  document.getElementById('pageTitle').textContent = titles[page]||page;
+  document.getElementById('pageBreadcrumb').textContent = '↗ '+subs[page];
+  if(page==='dashboard' && state.rawData.length) renderDashboard();
+  if(page==='data' && state.rawData.length) renderTable();
+  if(page==='chat') updateChatPanel();
+}
+
+// ─── FILE HANDLING ────────────────────────────────────────────────────────────
+function handleDrag(e){e.preventDefault();document.getElementById('uploadZone').classList.add('drag');}
+function handleDragLeave(e){document.getElementById('uploadZone').classList.remove('drag');}
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if(file) processFile(file);
+}
+function handleFile(e){const f=e.target.files[0];if(f)processFile(f);}
+
+function processFile(file){
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(ws, {header:1,defval:''});
+      if(json.length < 2){showToast('❌','Arquivo vazio ou inválido.');return;}
+      state.headers = json[0].map(h=>String(h).trim());
+      state.rawData = json.slice(1).map(row=>{
+        const obj={};
+        state.headers.forEach((h,i)=>obj[h]=row[i]!==undefined?row[i]:'');
+        return obj;
+      }).filter(r=>state.headers.some(h=>r[h]!==''));
+
+      const info = document.getElementById('fileInfo');
+      info.classList.add('show');
+      document.getElementById('fileName').textContent = file.name;
+      document.getElementById('fileRows').textContent = state.rawData.length+' registros';
+      document.getElementById('fileSize').textContent = formatBytes(file.size);
+      document.getElementById('statusDot').classList.add('on');
+      document.getElementById('statusText').textContent = state.rawData.length+' notícias';
+      populatePlayers();
+      showToast('✅',`${state.rawData.length} notícias carregadas com sucesso!`);
+    } catch(err){
+      showToast('❌','Erro ao ler o arquivo: '+err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function formatBytes(b){
+  if(b<1024)return b+'B';
+  if(b<1048576)return (b/1024).toFixed(1)+'KB';
+  return (b/1048576).toFixed(1)+'MB';
+}
+
+function goToAnalysis(){
+  if(!state.rawData.length){showToast('⚠️','Nenhum dado carregado.');return;}
+  showPage('dashboard');
+}
+
+// ─── PLAYER POPULATION ───────────────────────────────────────────────────────
+function populatePlayers(){
+  const players = getUniqueValues('Player').filter(Boolean);
+  const sel = document.getElementById('playerFilter');
+  sel.innerHTML = '<option value="">Todos os Players</option>';
+  players.forEach(p=>{
+    const opt=document.createElement('option');
+    opt.value=p;opt.textContent=p;
+    sel.appendChild(opt);
+  });
+  // Chat panel
+  const pills = document.getElementById('panelPlayers');
+  pills.innerHTML = '';
+  players.forEach(p=>{
+    const pill=document.createElement('span');
+    pill.className='filter-pill';
+    pill.textContent=p;
+    pill.onclick=()=>{
+      document.querySelectorAll('#panelPlayers .filter-pill').forEach(x=>x.classList.remove('active'));
+      pill.classList.add('active');
+      state.selectedPlayer=p;
+    };
+    pills.appendChild(pill);
+  });
+}
+
+function getUniqueValues(field){
+  return [...new Set(state.rawData.map(r=>r[field]).filter(v=>v!==undefined&&v!==''))];
+}
+
+// ─── FIELD RESOLVERS ──────────────────────────────────────────────────────────
+function resolveField(name){
+  const lname=name.toLowerCase();
+  return state.headers.find(h=>h.toLowerCase()===lname)||
+    state.headers.find(h=>h.toLowerCase().includes(lname))||null;
+}
+function getVal(row,name){
+  const f=resolveField(name);
+  return f?row[f]:'';
+}
+function getNumVal(row,name){
+  const v=getVal(row,name);
+  const n=parseFloat(String(v).replace(',','.'));
+  return isNaN(n)?0:n;
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+function renderDashboard(){
+  if(!state.rawData.length)return;
+  destroyCharts();
+  const playerF = document.getElementById('playerFilter').value;
+  const data = playerF ? state.rawData.filter(r=>getVal(r,'Player')===playerF) : state.rawData;
+
+  // ── STATS ────────────────────────────────────────────────────────────────────
+  const totalNoticias = data.length;
+  const players = getUniqueValues('Player');
+  const rpsVals = data.map(r=>getNumVal(r,'RPS')).filter(v=>v>0);
+  const avgRPS = rpsVals.length ? (rpsVals.reduce((a,b)=>a+b,0)/rpsVals.length).toFixed(1) : '—';
+  const aveVals = data.map(r=>getNumVal(r,'EquivalenciaPublicitaria')||getNumVal(r,'AVE')).filter(v=>v>0);
+  const totalAVE = aveVals.reduce((a,b)=>a+b,0);
+  const positivos = data.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length;
+  const pctPos = totalNoticias ? Math.round((positivos/totalNoticias)*100) : 0;
+
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card" style="--card-glow:rgba(99,179,237,.1)">
+      <div class="stat-card-label">Total de Notícias</div>
+      <div class="stat-card-value" style="color:var(--accent)">${totalNoticias.toLocaleString('pt-BR')}</div>
+      <div class="stat-card-sub">${players.length} players monitorados</div>
+    </div>
+    <div class="stat-card" style="--card-glow:rgba(246,173,85,.1)">
+      <div class="stat-card-label">RPS Médio</div>
+      <div class="stat-card-value" style="color:var(--accent2)">${avgRPS}</div>
+      <div class="stat-card-sub">Relevância · Protagonismo · Sentimento</div>
+    </div>
+    <div class="stat-card" style="--card-glow:rgba(104,211,145,.1)">
+      <div class="stat-card-label">AVE Total</div>
+      <div class="stat-card-value" style="color:var(--accent3)">${formatBRL(totalAVE)}</div>
+      <div class="stat-card-sub">Equivalência publicitária</div>
+    </div>
+    <div class="stat-card" style="--card-glow:rgba(${pctPos>60?'104,211,145':'252,129,129'},.1)">
+      <div class="stat-card-label">Sentimento Positivo</div>
+      <div class="stat-card-value" style="color:${pctPos>60?'var(--accent3)':'var(--accent-neg)'}">${pctPos}%</div>
+      <div class="stat-card-sub">${positivos} de ${totalNoticias} notícias</div>
+    </div>
+  `;
+
+  // ── CHARTS ───────────────────────────────────────────────────────────────────
+  const chartsGrid = document.getElementById('chartsGrid');
+  chartsGrid.innerHTML = `
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div><div class="chart-card-title">Sentimento por Player</div><div class="chart-card-sub">Distribuição positivo / negativo</div></div>
+      </div>
+      <div class="chart-wrap"><canvas id="c-sentimento"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div><div class="chart-card-title">Distribuição de Mídia</div><div class="chart-card-sub">Por tipo de veículo</div></div>
+      </div>
+      <div class="chart-wrap"><canvas id="c-midia"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div><div class="chart-card-title">RPS por Player</div><div class="chart-card-sub">Nota média de performance</div></div>
+      </div>
+      <div class="chart-wrap"><canvas id="c-rps"></canvas></div>
+    </div>
+  `;
+
+  const chartsGrid2 = document.getElementById('chartsGrid2');
+  chartsGrid2.innerHTML = `
+    <div class="chart-card" style="grid-column:span 2">
+      <div class="chart-card-header">
+        <div><div class="chart-card-title">Evolução Temporal de Notícias</div><div class="chart-card-sub">Volume por período</div></div>
+      </div>
+      <div class="chart-wrap" style="height:180px"><canvas id="c-temporal"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div><div class="chart-card-title">Protagonismo</div><div class="chart-card-sub">Sim vs Não</div></div>
+      </div>
+      <div class="chart-wrap"><canvas id="c-protagonismo"></canvas></div>
+    </div>
+  `;
+
+  requestAnimationFrame(()=>{
+    buildSentimentoChart(data);
+    buildMidiaChart(data);
+    buildRPSChart(data);
+    buildTemporalChart(data);
+    buildProtagonismoChart(data);
+  });
+}
+
+const CHART_DEFAULTS = {
+  plugins:{legend:{labels:{color:'#8892ab',font:{family:'DM Sans',size:12}}}},
+  scales:{
+    x:{ticks:{color:'#4a5270',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'rgba(255,255,255,0.06)'}},
+    y:{ticks:{color:'#4a5270',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'rgba(255,255,255,0.06)'}}
+  }
+};
+
+function buildSentimentoChart(data){
+  const players = getUniqueValues('Player').slice(0,7);
+  if(!players.length){buildFallback('c-sentimento','Sem campo Player');return;}
+  const pos=players.map(p=>data.filter(r=>getVal(r,'Player')===p&&(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length);
+  const neg=players.map(p=>data.filter(r=>getVal(r,'Player')===p&&(getVal(r,'Sentimento')||'').toLowerCase().includes('neg')).length);
+  state.charts['sentimento']=new Chart(document.getElementById('c-sentimento'),{
+    type:'bar',
+    data:{labels:players,datasets:[
+      {label:'Positivo',data:pos,backgroundColor:'rgba(104,211,145,.7)',borderRadius:4},
+      {label:'Negativo',data:neg,backgroundColor:'rgba(252,129,129,.7)',borderRadius:4}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{...CHART_DEFAULTS.plugins,title:{display:false}},scales:CHART_DEFAULTS.scales}
+  });
+}
+
+function buildMidiaChart(data){
+  const midias={};
+  data.forEach(r=>{const m=getVal(r,'Midia')||getVal(r,'Mídia')||'Outro';midias[m]=(midias[m]||0)+1;});
+  const labels=Object.keys(midias),vals=Object.values(midias);
+  state.charts['midia']=new Chart(document.getElementById('c-midia'),{
+    type:'doughnut',
+    data:{labels,datasets:[{data:vals,backgroundColor:['#63b3ed','#f6ad55','#68d391','#fc8181','#b794f4'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{...CHART_DEFAULTS.plugins}}
+  });
+}
+
+function buildRPSChart(data){
+  const players=getUniqueValues('Player').slice(0,8);
+  if(!players.length){buildFallback('c-rps','Sem dados de Player');return;}
+  const avgRps=players.map(p=>{
+    const vals=data.filter(r=>getVal(r,'Player')===p).map(r=>getNumVal(r,'RPS')).filter(v=>v>0);
+    return vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):0;
+  });
+  state.charts['rps']=new Chart(document.getElementById('c-rps'),{
+    type:'bar',
+    data:{labels:players,datasets:[{label:'RPS Médio',data:avgRps,backgroundColor:'rgba(99,179,237,.7)',borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{...CHART_DEFAULTS.plugins},scales:CHART_DEFAULTS.scales}
+  });
+}
+
+function buildTemporalChart(data){
+  const dateField = resolveField('DataVeiculacao')||resolveField('Data');
+  if(!dateField){buildFallback('c-temporal','Sem campo de data');return;}
+  const monthly={};
+  data.forEach(r=>{
+    const v=r[dateField];
+    if(!v)return;
+    let d;
+    if(typeof v==='number'){d=new Date((v-25569)*86400000);}
+    else{d=new Date(v);}
+    if(isNaN(d))return;
+    const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    monthly[k]=(monthly[k]||0)+1;
+  });
+  const sorted=Object.keys(monthly).sort();
+  state.charts['temporal']=new Chart(document.getElementById('c-temporal'),{
+    type:'line',
+    data:{labels:sorted,datasets:[{label:'Notícias',data:sorted.map(k=>monthly[k]),borderColor:'#63b3ed',backgroundColor:'rgba(99,179,237,.08)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#63b3ed'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{...CHART_DEFAULTS.plugins},scales:CHART_DEFAULTS.scales}
+  });
+}
+
+function buildProtagonismoChart(data){
+  const sim=data.filter(r=>(getVal(r,'Protagonismo')||'').toLowerCase().includes('sim')).length;
+  const nao=data.length-sim;
+  state.charts['prot']=new Chart(document.getElementById('c-protagonismo'),{
+    type:'pie',
+    data:{labels:['Protagonista','Não Protagonista'],datasets:[{data:[sim,nao],backgroundColor:['#63b3ed','#1a1e35'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{...CHART_DEFAULTS.plugins}}
+  });
+}
+
+function buildFallback(canvasId,msg){
+  const ctx=document.getElementById(canvasId);
+  if(!ctx)return;
+  const p=document.createElement('p');
+  p.style.cssText='color:var(--text3);font-size:12px;text-align:center;padding:40px 0;';
+  p.textContent=msg;
+  ctx.parentNode.replaceChild(p,ctx);
+}
+
+function formatBRL(v){
+  if(v===0)return 'R$ 0';
+  if(v>=1000000)return 'R$ '+(v/1000000).toFixed(1)+'M';
+  if(v>=1000)return 'R$ '+(v/1000).toFixed(0)+'k';
+  return 'R$ '+v.toFixed(0);
+}
+
+// ─── DATA TABLE ───────────────────────────────────────────────────────────────
+let filteredRows = [];
+function renderTable(){
+  if(!state.rawData.length)return;
+  filteredRows = [...state.rawData];
+  document.getElementById('dataTableInfo').textContent = `${state.rawData.length} notícias · ${state.headers.length} campos`;
+  buildTableUI();
+}
+
+function filterTable(){
+  const q=(document.getElementById('tableSearch').value||'').toLowerCase();
+  filteredRows = q ? state.rawData.filter(r=>Object.values(r).some(v=>String(v).toLowerCase().includes(q))) : [...state.rawData];
+  buildTableUI();
+}
+
+function buildTableUI(){
+  const cols = ['Player','Titulo','Veiculo','Midia','Sentimento','Protagonismo','RPS','EquivalenciaPublicitaria','DataVeiculacao'].filter(c=>resolveField(c));
+  const thead=document.querySelector('#dataTable thead');
+  const tbody=document.querySelector('#dataTable tbody');
+  thead.innerHTML='<tr>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr>';
+  const slice=filteredRows.slice(0,200);
+  tbody.innerHTML=slice.map(r=>`<tr>${cols.map(c=>{
+    const v=getVal(r,c)||'—';
+    const lower=String(v).toLowerCase();
+    let style='';
+    if(c==='Sentimento'){
+      if(lower.includes('pos'))style='color:#68d391';
+      else if(lower.includes('neg'))style='color:#fc8181';
+    }
+    return `<td style="${style}" title="${v}">${v}</td>`;
+  }).join('')}</tr>`).join('');
+  document.getElementById('tableFooter').textContent=`Exibindo ${slice.length} de ${filteredRows.length} registros`;
+}
+
+// ─── CHAT ─────────────────────────────────────────────────────────────────────
+function updateChatPanel(){
+  if(!state.rawData.length)return;
+  const players=getUniqueValues('Player');
+  const rpsVals=state.rawData.map(r=>getNumVal(r,'RPS')).filter(v=>v>0);
+  const avgRPS=rpsVals.length?(rpsVals.reduce((a,b)=>a+b,0)/rpsVals.length).toFixed(2):0;
+  const aveVals=state.rawData.map(r=>getNumVal(r,'EquivalenciaPublicitaria')||getNumVal(r,'AVE')).filter(v=>v>0);
+  const totalAVE=aveVals.reduce((a,b)=>a+b,0);
+  const pos=state.rawData.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length;
+
+  document.getElementById('chatModelLabel').textContent='Modelo: '+state.selectedLlmName;
+  document.getElementById('panelSummary').innerHTML=`
+    <div class="mini-metric"><span class="mini-metric-label">Total notícias</span><span class="mini-metric-val" style="color:var(--accent)">${state.rawData.length}</span></div>
+    <div class="mini-metric"><span class="mini-metric-label">Players</span><span class="mini-metric-val">${players.length}</span></div>
+    <div class="mini-metric"><span class="mini-metric-label">RPS Médio</span><span class="mini-metric-val" style="color:var(--accent2)">${avgRPS}</span></div>
+    <div class="mini-metric"><span class="mini-metric-label">AVE Total</span><span class="mini-metric-val" style="color:var(--accent3)">${formatBRL(totalAVE)}</span></div>
+    <div class="mini-metric"><span class="mini-metric-label">% Positivo</span><span class="mini-metric-val">${Math.round((pos/state.rawData.length)*100)}%</span></div>
+  `;
+  document.getElementById('panelMetrics').innerHTML=`
+    ${players.slice(0,5).map(p=>{
+      const pData=state.rawData.filter(r=>getVal(r,'Player')===p);
+      const pPos=pData.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length;
+      const pct=pData.length?Math.round((pPos/pData.length)*100):0;
+      return `<div class="mini-metric">
+        <span class="mini-metric-label">${p}</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="tag ${pct>60?'tag-pos':pct<40?'tag-neg':'tag-neu'}">${pct}%</span>
+          <span style="font-size:11px;color:var(--text3)">${pData.length}n</span>
+        </div>
+      </div>`;
+    }).join('')}
+  `;
+}
+
+function handleChatKey(e){
+  if(e.key==='Enter' && !e.shiftKey){e.preventDefault();sendMessage();}
+}
+
+function autoResize(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,120)+'px';
+}
+
+function useQuickQ(el){
+  // Strip leading emoji + space
+  const raw = el.textContent.trim();
+  const q = raw.replace(/^[\u{1F300}-\u{1FAFF}][\u{FE0F}]?\s*/u,'').trim();
+  document.getElementById('chatInput').value = q||raw;
+  sendMessage();
+}
+
+function clearChat(){
+  state.chatHistory=[];
+  const msgs=document.getElementById('chatMessages');
+  msgs.innerHTML=`<div class="empty-state" id="chatEmpty">
+    <div class="empty-icon">🧠</div>
+    <div class="empty-title">Analista de Mídia IA</div>
+    <div class="empty-sub">Faça perguntas sobre sua cobertura de mídia. Vou analisar os dados, gerar gráficos e sugerir ações estratégicas.</div>
+  </div>`;
+}
+
+async function sendMessage(){
+  const input=document.getElementById('chatInput');
+  const q=input.value.trim();
+  if(!q)return;
+  if(!state.rawData.length){
+    showToast('⚠️','Importe uma planilha antes de fazer perguntas.');
+    showPage('upload');return;
+  }
+  // Hide empty state
+  const emptyEl=document.getElementById('chatEmpty');
+  if(emptyEl)emptyEl.remove();
+
+  addMessage('user',q);
+  input.value='';
+  input.style.height='auto';
+  document.getElementById('sendBtn').disabled=true;
+
+  // Loading bubble
+  const loadId='load-'+Date.now();
+  addLoadingMsg(loadId);
+
+  try{
+    const answer = await analyzeQuery(q);
+    removeMsg(loadId);
+    addAIMessage(answer, q);
+  }catch(err){
+    removeMsg(loadId);
+    // Always fallback to local analysis on any error
+    try{
+      const fallback = localAnalyze(q, buildDataSummary());
+      addAIMessage(fallback, q);
+    }catch(e2){
+      addMessage('ai','Não foi possível processar a pergunta. Tente reformular ou verifique os dados importados.');
+    }
+  }
+  document.getElementById('sendBtn').disabled=false;
+}
+
+function addMessage(role,text){
+  const msgs=document.getElementById('chatMessages');
+  const div=document.createElement('div');
+  div.className=`msg msg-${role}`;
+  const now=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  div.innerHTML=`
+    <div class="msg-bubble">${escHtml(text)}</div>
+    <div class="msg-meta">${role==='user'?'Você':'🤖 Analista IA'} · ${now}</div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function addLoadingMsg(id){
+  const msgs=document.getElementById('chatMessages');
+  const div=document.createElement('div');
+  div.className='msg msg-ai';div.id=id;
+  div.innerHTML=`<div class="msg-bubble"><div class="loading-dots"><span></span><span></span><span></span></div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function removeMsg(id){
+  const el=document.getElementById(id);
+  if(el)el.remove();
+}
+
+function addAIMessage(result, question){
+  const msgs=document.getElementById('chatMessages');
+  const div=document.createElement('div');
+  div.className='msg msg-ai';
+  const now=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const chartId='chart-'+Date.now();
+
+  let chartHtml='';
+  if(result.chartData){
+    chartHtml=`<div class="msg-chart">
+      <div class="msg-chart-title">📊 Visualização</div>
+      <div style="position:relative;height:180px;"><canvas id="${chartId}"></canvas></div>
+    </div>`;
+  }
+
+  let analysisHtml='';
+  if(result.analysis){
+    analysisHtml=`<div class="msg-analysis"><strong>🔍 Análise:</strong> ${result.analysis}</div>`;
+  }
+
+  let insightsHtml='';
+  if(result.insights && result.insights.length){
+    insightsHtml=`<div class="msg-insights">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;">💡 Ações Sugeridas</div>
+      ${result.insights.map(ins=>`<div class="insight-item"><div class="insight-bullet">→</div>${ins}</div>`).join('')}
+    </div>`;
+  }
+
+  div.innerHTML=`
+    <div class="msg-bubble">
+      <div>${result.text}</div>
+      ${chartHtml}
+      ${analysisHtml}
+      ${insightsHtml}
+    </div>
+    <div class="msg-meta">🤖 Analista IA · ${now}</div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+
+  if(result.chartData){
+    requestAnimationFrame(()=>{
+      new Chart(document.getElementById(chartId),result.chartData);
+    });
+  }
+}
+
+// ─── ENVIRONMENT DETECTION ───────────────────────────────────────────────────
+const IS_SECURE = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+const IS_FILE   = location.protocol === 'file:';
+
+// ─── AI ANALYSIS ENGINE ───────────────────────────────────────────────────────
+async function analyzeQuery(question){
+  const apiKey = state.apiKeys[state.selectedLlm];
+  const summary = buildDataSummary();
+
+  // Avisa se está rodando como arquivo local
+  if(IS_FILE){
+    showEnvWarning();
+    return localAnalyze(question, summary);
+  }
+
+  // Tenta LLM real se tiver key e estiver em HTTPS
+  if(apiKey && apiKey.length > 8 && IS_SECURE){
+    try{
+      const result = await callLLM(question, summary, apiKey);
+      return result;
+    }catch(err){
+      const msg = err.message || '';
+      const isHTTP401 = msg.includes('401');
+      const isHTTP403 = msg.includes('403');
+      const isNetwork = msg.toLowerCase().includes('failed to fetch') || msg.toLowerCase().includes('networkerror') || msg.toLowerCase().includes('cors');
+
+      if(isHTTP401 || isHTTP403){
+        showApiKeyError(state.selectedLlmName);
+      } else if(isNetwork){
+        showNetworkError(state.selectedLlmName);
+      } else {
+        showApiError(msg, state.selectedLlmName);
+      }
+      console.warn('[MIA] LLM API falhou, usando análise local:', msg);
+    }
+  } else if(!apiKey || apiKey.length <= 8){
+    // Sem key: usa local silenciosamente
+  }
+
+  return localAnalyze(question, summary);
+}
+
+function showEnvWarning(){
+  if(document.getElementById('envWarning')) return;
+  const msgs = document.getElementById('chatMessages');
+  const el = document.createElement('div');
+  el.id = 'envWarning';
+  el.style.cssText='background:rgba(246,173,85,.07);border:1px solid rgba(246,173,85,.25);border-radius:10px;padding:12px 16px;font-size:12.5px;color:#f6ad55;line-height:1.7;margin-bottom:8px;';
+  el.innerHTML=`<strong>📂 Arquivo local detectado</strong> — APIs de LLM são bloqueadas pelo navegador quando o arquivo é aberto diretamente.<br>
+  <span style="opacity:.75">Usando <strong>análise local</strong> (funciona offline). Para LLMs reais, acesse a versão hospedada no <strong>GitHub Pages</strong>.</span>`;
+  msgs.insertBefore(el, msgs.firstChild);
+}
+
+function showApiKeyError(name){
+  addInlineWarning(`🔑 API Key inválida ou expirada para <strong>${name}</strong>. Verifique em <em>🔑 API Keys</em> e tente novamente.`, 'rgba(252,129,129,.08)', 'rgba(252,129,129,.3)', '#fc8181');
+}
+
+function showNetworkError(name){
+  addInlineWarning(`🌐 Não foi possível conectar à API da <strong>${name}</strong>. Verifique sua conexão ou tente outro LLM. Usando análise local.`, 'rgba(246,173,85,.08)', 'rgba(246,173,85,.3)', '#f6ad55');
+}
+
+function showApiError(msg, name){
+  addInlineWarning(`⚠️ Erro na API <strong>${name}</strong>: ${msg}. Usando análise local.`, 'rgba(246,173,85,.08)', 'rgba(246,173,85,.3)', '#f6ad55');
+}
+
+function addInlineWarning(html, bg, border, color){
+  const msgs = document.getElementById('chatMessages');
+  const el = document.createElement('div');
+  el.style.cssText=`background:${bg};border:1px solid ${border};border-radius:10px;padding:10px 14px;font-size:12px;color:${color};line-height:1.6;margin-bottom:4px;`;
+  el.innerHTML = html;
+  msgs.appendChild(el);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function buildDataSummary(){
+  const d=state.rawData;
+  if(!d.length)return'Sem dados.';
+  const players=getUniqueValues('Player').slice(0,10);
+  const sentDist={};
+  d.forEach(r=>{const s=getVal(r,'Sentimento')||'N/A';sentDist[s]=(sentDist[s]||0)+1;});
+  const midias={};
+  d.forEach(r=>{const m=getVal(r,'Midia')||getVal(r,'Mídia')||'Outro';midias[m]=(midias[m]||0)+1;});
+  const rpsVals=d.map(r=>getNumVal(r,'RPS')).filter(v=>v>0);
+  const avgRPS=rpsVals.length?(rpsVals.reduce((a,b)=>a+b,0)/rpsVals.length).toFixed(2):0;
+  const aveVals=d.map(r=>getNumVal(r,'EquivalenciaPublicitaria')||getNumVal(r,'AVE')).filter(v=>v>0);
+  const totalAVE=aveVals.reduce((a,b)=>a+b,0);
+  const temas=getUniqueValues('Temas').slice(0,10);
+  const prot=d.filter(r=>(getVal(r,'Protagonismo')||'').toLowerCase().includes('sim')).length;
+  const motiv={};
+  d.forEach(r=>{const m=getVal(r,'Motivação')||getVal(r,'Motivacao')||'N/A';motiv[m]=(motiv[m]||0)+1;});
+
+  const playerStats=players.map(p=>{
+    const pd=d.filter(r=>getVal(r,'Player')===p);
+    const rps=pd.map(r=>getNumVal(r,'RPS')).filter(v=>v>0);
+    const avgR=rps.length?(rps.reduce((a,b)=>a+b,0)/rps.length).toFixed(2):0;
+    const pos=pd.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length;
+    const ave=pd.map(r=>getNumVal(r,'EquivalenciaPublicitaria')||getNumVal(r,'AVE')).reduce((a,b)=>a+b,0);
+    const prot_=pd.filter(r=>(getVal(r,'Protagonismo')||'').toLowerCase().includes('sim')).length;
+    return `${p}: ${pd.length} notícias | RPS médio ${avgR} | ${pos} positivas (${pd.length?Math.round(pos/pd.length*100):0}%) | Protagonismo: ${prot_} | AVE: R$ ${ave.toFixed(0)}`;
+  });
+
+  return `BASE DE DADOS DE MONITORAMENTO DE MÍDIA
+Total: ${d.length} notícias
+Players: ${players.join(', ')}
+Campos disponíveis: ${state.headers.join(', ')}
+RPS Médio Geral: ${avgRPS}
+AVE Total: R$ ${totalAVE.toFixed(0)}
+Sentimento: ${JSON.stringify(sentDist)}
+Motivação: ${JSON.stringify(motiv)}
+Mídias: ${JSON.stringify(midias)}
+Temas: ${temas.join(', ')}
+Protagonismo: ${prot} de ${d.length} (${Math.round(prot/d.length*100)}%)
+Stats por Player:
+${playerStats.join('\n')}`;
+}
+
+async function callLLM(question, context, apiKey){
+  const llm = state.selectedLlm;
+
+  const sysPrompt = `Você é um especialista em Inteligência de Mídia e Comunicação Corporativa brasileiro. Analise os dados de monitoramento de mídia e responda em português do Brasil.
+
+Responda SEMPRE com um objeto JSON válido (sem markdown, sem blocos de código) exatamente neste formato:
+{
+  "text": "Resposta direta com dados específicos em HTML simples (use <strong>, <br>, <span>)",
+  "chartType": "bar|line|doughnut|pie|horizontalBar ou null se não aplicável",
+  "chartLabels": ["label1","label2"],
+  "chartValues": [10, 20],
+  "chartLabel": "Nome da série de dados",
+  "analysis": "Análise estratégica contextualizada em 2-3 frases",
+  "insights": ["Ação concreta 1","Ação concreta 2","Ação concreta 3"]
+}`;
+
+  const userMsg = `DADOS DE MONITORAMENTO:\n${context}\n\nPERGUNTA DO USUÁRIO: ${question}`;
+
+  let endpoint, headers, body;
+
+  // ── OpenAI ────────────────────────────────────────────────────────────────
+  if(llm === 'openai'){
+    endpoint = 'https://api.openai.com/v1/chat/completions';
+    headers  = {'Content-Type':'application/json','Authorization':'Bearer '+apiKey};
+    body     = {model:'gpt-4o-mini',messages:[{role:'system',content:sysPrompt},{role:'user',content:userMsg}],response_format:{type:'json_object'},max_tokens:1200};
+  }
+  // ── DeepSeek ──────────────────────────────────────────────────────────────
+  else if(llm === 'deepseek'){
+    endpoint = 'https://api.deepseek.com/v1/chat/completions';
+    headers  = {'Content-Type':'application/json','Authorization':'Bearer '+apiKey};
+    body     = {model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userMsg}],max_tokens:1200};
+  }
+  // ── Claude (Anthropic) ────────────────────────────────────────────────────
+  // Requer: anthropic-dangerous-direct-browser-access: true para chamadas browser->API
+  else if(llm === 'claude'){
+    endpoint = 'https://api.anthropic.com/v1/messages';
+    headers  = {
+      'Content-Type'                          : 'application/json',
+      'x-api-key'                             : apiKey,
+      'anthropic-version'                     : '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'   // ← OBRIGATÓRIO para browser
+    };
+    body = {model:'claude-sonnet-4-5-20250929',max_tokens:1200,system:sysPrompt,messages:[{role:'user',content:userMsg}]};
+  }
+  // ── Grok (xAI) ────────────────────────────────────────────────────────────
+  else if(llm === 'grok'){
+    endpoint = 'https://api.x.ai/v1/chat/completions';
+    headers  = {'Content-Type':'application/json','Authorization':'Bearer '+apiKey};
+    body     = {model:'grok-3-mini',messages:[{role:'system',content:sysPrompt},{role:'user',content:userMsg}],max_tokens:1200};
+  }
+  // ── Qwen (Alibaba DashScope) ──────────────────────────────────────────────
+  else if(llm === 'qwen'){
+    endpoint = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions';
+    headers  = {'Content-Type':'application/json','Authorization':'Bearer '+apiKey};
+    body     = {model:'qwen-plus',messages:[{role:'system',content:sysPrompt},{role:'user',content:userMsg}],max_tokens:1200};
+  }
+
+  const resp = await fetch(endpoint, {method:'POST', headers, body:JSON.stringify(body)});
+
+  if(!resp.ok){
+    const errBody = await resp.text().catch(()=>'');
+    throw new Error(`HTTP ${resp.status}: ${resp.statusText}. ${errBody.substring(0,120)}`);
+  }
+
+  const json = await resp.json();
+
+  // Extrai texto da resposta conforme formato de cada API
+  let raw;
+  if(llm === 'claude'){
+    raw = json?.content?.[0]?.text || '';
+  } else {
+    raw = json?.choices?.[0]?.message?.content || '';
+  }
+
+  if(!raw) throw new Error('Resposta vazia da API');
+
+  // Parse JSON — remove blocos markdown se o modelo os incluir
+  let parsed;
+  try{
+    const clean = raw.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
+    const match = clean.match(/\{[\s\S]*\}/);
+    parsed = JSON.parse(match ? match[0] : clean);
+  }catch(e){
+    // Se não conseguir parsear JSON, retorna o texto bruto como resposta
+    return {text: raw.replace(/\n/g,'<br>'), analysis:'', insights:[], chartData:null};
+  }
+  return buildResultFromParsed(parsed);
+}
+
+function buildResultFromParsed(p){
+  let chartData=null;
+  if(p.chartType && p.chartLabels && p.chartValues){
+    const colors=['#63b3ed','#f6ad55','#68d391','#fc8181','#b794f4','#76e4f7','#fbb6ce'];
+    const type=p.chartType==='horizontalBar'?'bar':p.chartType;
+    chartData={
+      type,
+      data:{
+        labels:p.chartLabels,
+        datasets:[{
+          label:p.chartLabel||'Dados',
+          data:p.chartValues,
+          backgroundColor:type==='line'?'rgba(99,179,237,.1)':p.chartLabels.map((_,i)=>colors[i%colors.length]),
+          borderColor:type==='line'?'#63b3ed':undefined,
+          borderRadius:type==='bar'?4:undefined,
+          fill:type==='line'?true:undefined,
+          tension:type==='line'?.4:undefined
+        }]
+      },
+      options:{
+        indexAxis:p.chartType==='horizontalBar'?'y':'x',
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}},
+        scales:(type==='doughnut'||type==='pie')?undefined:{
+          x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},
+          y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}
+        }
+      }
+    };
+  }
+  return {text:p.text||'',analysis:p.analysis||'',insights:p.insights||[],chartData};
+}
+
+// ─── HELPERS ────────────────────────────────────────────────────────────────
+function barChart(labels,datasets,horizontal=false){
+  return {type:'bar',data:{labels,datasets},options:{indexAxis:horizontal?'y':'x',responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}};
+}
+function lineChart(labels,data,label='Notícias'){
+  return {type:'line',data:{labels,datasets:[{label,data,borderColor:'#63b3ed',backgroundColor:'rgba(99,179,237,.08)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#63b3ed'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}};
+}
+function doughnutChart(labels,data){
+  const colors=['#63b3ed','#f6ad55','#68d391','#fc8181','#b794f4','#76e4f7','#fbb6ce','#c3dafe'];
+  return {type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors.slice(0,labels.length),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}}}};
+}
+function singleBar(labels,data,label,color='rgba(99,179,237,.75)'){
+  return barChart(labels,[{label,data,backgroundColor:color,borderRadius:4}]);
+}
+function hBar(labels,data,label,color='rgba(246,173,85,.75)'){
+  return barChart(labels,[{label,data,backgroundColor:color,borderRadius:4}],true);
+}
+
+// Parse date from row
+function parseDate(row){
+  const f=resolveField('DataVeiculacao')||resolveField('Data');
+  if(!f)return null;
+  const v=row[f];if(!v)return null;
+  let dt=typeof v==='number'?new Date((v-25569)*86400000):new Date(v);
+  return isNaN(dt)?null:dt;
+}
+
+// Detect if question mentions a specific player
+function detectPlayer(q){
+  return getUniqueValues('Player').find(p=>q.includes(p.toLowerCase()))||null;
+}
+
+function localAnalyze(question, summary){
+  const q=question.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const d=state.rawData;
+  const allPlayers=getUniqueValues('Player').slice(0,8);
+  const mentionedPlayer=detectPlayer(q);
+  const scope=mentionedPlayer?d.filter(r=>getVal(r,'Player')===mentionedPlayer):d;
+  const scopeLabel=mentionedPlayer?`do ${mentionedPlayer}`:'geral';
+
+  // ── SENTIMENTO ────────────────────────────────────────────────────────────
+  if(/sentimento|sentimen|positiv|negativ|tone|favoravel|desfavoravel/.test(q)){
+    const pos=scope.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length;
+    const neg=scope.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('neg')).length;
+    const neu=scope.length-pos-neg;
+    const pct=scope.length?Math.round(pos/scope.length*100):0;
+    const players=mentionedPlayer?[mentionedPlayer]:allPlayers;
+    const posVals=players.map(p=>d.filter(r=>getVal(r,'Player')===p&&(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length);
+    const negVals=players.map(p=>d.filter(r=>getVal(r,'Player')===p&&(getVal(r,'Sentimento')||'').toLowerCase().includes('neg')).length);
+    const piorPlayer=players[negVals.indexOf(Math.max(...negVals))];
+    return {
+      text:`📊 <strong>Sentimento ${scopeLabel}</strong><br><br>De <strong>${scope.length}</strong> notícias analisadas:<br>• <span style="color:#68d391">✅ Positivas: <strong>${pos}</strong> (${pct}%)</span><br>• <span style="color:#fc8181">❌ Negativas: <strong>${neg}</strong> (${Math.round(neg/scope.length*100)}%)</span><br>• ⚪ Neutras: <strong>${neu}</strong> (${Math.round(neu/scope.length*100)}%)<br><br>${pct>60?'🟢 Cobertura predominantemente favorável':pct<40?'🔴 Atenção: predominância negativa':'🟡 Cobertura equilibrada'}`,
+      analysis:`O sentimento ${scopeLabel} está ${pct>60?'favorável, com maioria das publicações em tom positivo':'em alerta — a proporção negativa compromete a reputação midiática'}. ${mentionedPlayer?'':'O player com maior índice negativo é '+piorPlayer+', que merece atenção prioritária.'}`,
+      insights:[
+        pct>60?`Capitalize a cobertura positiva — crie um relatório de clipping positivo para compartilhar com a liderança e stakeholders`:`Mapeie as pautas negativas e elabore um plano de resposta reativa com argumentários por tema`,
+        `Identifique os ${neg>0?neg+' veículos com ':' '}cobertura negativa e agende reuniões de relacionamento com os jornalistas responsáveis`,
+        `Implemente um termômetro de sentimento semanal para detectar mudanças de percepção antes que se tornem crises`
+      ],
+      chartData: players.length>1
+        ? {type:'bar',data:{labels:players,datasets:[{label:'Positivo',data:posVals,backgroundColor:'rgba(104,211,145,.75)',borderRadius:4},{label:'Negativo',data:negVals,backgroundColor:'rgba(252,129,129,.75)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}} }
+        : doughnutChart(['Positivo','Negativo','Neutro'],[pos,neg,neu])
+    };
+  }
+
+  // ── RPS ──────────────────────────────────────────────────────────────────
+  if(/\brps\b|relevancia|relevância|pontuacao|pontuação|nota|score/.test(q)){
+    const players=allPlayers;
+    const avgVals=players.map(p=>{
+      const vals=d.filter(r=>getVal(r,'Player')===p).map(r=>getNumVal(r,'RPS')).filter(v=>v>0);
+      return vals.length?+(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):0;
+    });
+    const maxV=players[avgVals.indexOf(Math.max(...avgVals))];
+    const minV=players[avgVals.indexOf(Math.min(...avgVals.filter(v=>v>0)))];
+    const potVals=players.map(p=>{
+      const vals=d.filter(r=>getVal(r,'Player')===p).map(r=>getNumVal(r,'RPS Potencial')).filter(v=>v>0);
+      return vals.length?+(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):0;
+    });
+    const eficVals=players.map(p=>{
+      const vals=d.filter(r=>getVal(r,'Player')===p).map(r=>getNumVal(r,'RPS Eficaz')).filter(v=>v>0);
+      return vals.length?+(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):0;
+    });
+    return {
+      text:`📈 <strong>RPS por Player</strong><br><br>${players.map((p,i)=>`• <strong>${p}</strong>: RPS <span style="color:var(--accent2)">${avgVals[i]}</span>${potVals[i]>0?` / Potencial: ${potVals[i]}`:''}`).join('<br>')}<br><br>🏆 Maior RPS: <strong>${maxV}</strong> · ⚠️ Menor: <strong>${minV}</strong>`,
+      analysis:`${maxV} lidera o ranking de qualidade midiática com o maior RPS médio, indicando cobertura em veículos estratégicos com protagonismo e sentimento positivo. ${minV} apresenta o menor índice e deve ser prioridade na estratégia de relacionamento com a imprensa.`,
+      insights:[
+        `Analise as notícias de alto RPS de ${maxV} e replique a estratégia de abordagem e posicionamento para os demais players`,
+        `Foque o relacionamento de ${minV} em veículos Tier 1 — a qualidade do veículo é o fator de maior peso no RPS`,
+        `Inclua metas de RPS mínimo (ex: ${(Math.max(...avgVals)*0.8).toFixed(1)}) nos acordos de nível de serviço da equipe de assessoria`
+      ],
+      chartData: hBar(players,avgVals,'RPS Médio','rgba(246,173,85,.75)')
+    };
+  }
+
+  // ── AVE / EQUIVALÊNCIA ───────────────────────────────────────────────────
+  if(/ave|equivalen|publicitari|valor|roi|retorno|investimento/.test(q)){
+    const players=allPlayers;
+    const aveVals=players.map(p=>d.filter(r=>getVal(r,'Player')===p).map(r=>getNumVal(r,'EquivalenciaPublicitaria')||getNumVal(r,'AVE')).reduce((a,b)=>a+b,0));
+    const total=aveVals.reduce((a,b)=>a+b,0);
+    const impactVals=players.map(p=>d.filter(r=>getVal(r,'Player')===p).map(r=>getNumVal(r,'Impacto')).reduce((a,b)=>a+b,0));
+    const totalImpact=impactVals.reduce((a,b)=>a+b,0);
+    const best=players[aveVals.indexOf(Math.max(...aveVals))];
+    return {
+      text:`💰 <strong>Equivalência Publicitária (AVE) ${scopeLabel}</strong><br><br>${players.map((p,i)=>`• <strong>${p}</strong>: ${formatBRL(aveVals[i])} ${impactVals[i]>0?'· Impacto: '+impactVals[i].toLocaleString('pt-BR')+'':''}` ).join('<br>')}<br><br>📊 <strong>Total: ${formatBRL(total)}</strong>${totalImpact>0?`<br>👁 Alcance estimado: ${totalImpact.toLocaleString('pt-BR')} pessoas`:''}`,
+      analysis:`O AVE total de ${formatBRL(total)} representa o valor equivalente em publicidade paga que a equipe de comunicação gerou organicamente. ${best} é o player com maior retorno, concentrando ${total>0?Math.round(aveVals[players.indexOf(best)]/total*100):0}% do valor total.`,
+      insights:[
+        `Apresente o AVE de ${formatBRL(total)} como ROI da assessoria à diretoria — compare com o custo da equipe para demonstrar valor gerado`,
+        `Veículos Tier 1 têm maior peso no AVE — priorize relacionamento e geração de pautas nestes veículos para maximizar o retorno`,
+        `Segmente o relatório de AVE por player e apresente o ranking mensalmente para estimular a equipe e alinhar prioridades`
+      ],
+      chartData: doughnutChart(players.filter((_,i)=>aveVals[i]>0), aveVals.filter(v=>v>0))
+    };
+  }
+
+  // ── PROTAGONISMO ─────────────────────────────────────────────────────────
+  if(/protagonism|protagonista|destaque|principal|citacao|citação|espaco|espaço/.test(q)){
+    const players=allPlayers;
+    const simVals=players.map(p=>d.filter(r=>getVal(r,'Player')===p&&(getVal(r,'Protagonismo')||'').toLowerCase().includes('sim')).length);
+    const naoVals=players.map(p=>d.filter(r=>getVal(r,'Player')===p&&!(getVal(r,'Protagonismo')||'').toLowerCase().includes('sim')).length);
+    const totalSim=simVals.reduce((a,b)=>a+b,0);
+    const pct=d.length?Math.round(totalSim/d.length*100):0;
+    // Espaço breakdown
+    const espacos={};
+    d.forEach(r=>{const e=getVal(r,'Espaco')||getVal(r,'Espaço')||'N/A';espacos[e]=(espacos[e]||0)+1;});
+    return {
+      text:`🎯 <strong>Protagonismo ${scopeLabel}</strong><br><br>De <strong>${d.length}</strong> notícias:<br>• <span style="color:var(--accent)">Protagonista: <strong>${totalSim}</strong> (${pct}%)</span><br>• Não protagonista: <strong>${d.length-totalSim}</strong><br><br><strong>Por player:</strong><br>${players.map((p,i)=>`• ${p}: ${simVals[i]} sim / ${naoVals[i]} não`).join('<br>')}${Object.keys(espacos).length>1?`<br><br><strong>Ocupação de Espaço:</strong><br>${Object.entries(espacos).map(([k,v])=>`• ${k}: ${v}`).join('<br>')}` :''}`,
+      analysis:`A taxa de protagonismo de ${pct}% ${pct>50?'é positiva — as marcas frequentemente lideram a pauta midiática':'está abaixo do ideal. Muitas menções são apenas citações, sem centralidade na narrativa'}.`,
+      insights:[
+        `Desenvolva pautas exclusivas com ângulos únicos para cada player — pautas exclusivas aumentam dramaticamente o protagonismo`,
+        `Treine porta-vozes para assumir posicionamentos claros e diferenciados que forcem os veículos a tratá-los como referência no tema`,
+        `Estabeleça meta de ${Math.min(pct+15,80)}% de protagonismo para o próximo trimestre e monitore semanalmente`
+      ],
+      chartData:{type:'bar',data:{labels:players,datasets:[{label:'Protagonista',data:simVals,backgroundColor:'rgba(99,179,237,.75)',borderRadius:4},{label:'Não Protagonista',data:naoVals,backgroundColor:'rgba(74,82,112,.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}} }
+    };
+  }
+
+  // ── VEÍCULOS / IMPRENSA ──────────────────────────────────────────────────
+  if(/veiculo|veículo|jornal|revista|radio|tv|televisao|televisão|portal|impresso|web|midia|mídia|top|ranking|mais publicou|publicacao/.test(q)){
+    const veic={};
+    d.forEach(r=>{const v=getVal(r,'Veiculo')||'N/A';veic[v]=(veic[v]||0)+1;});
+    const sorted=Object.entries(veic).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    const midias={};
+    d.forEach(r=>{const m=getVal(r,'Midia')||'Outro';midias[m]=(midias[m]||0)+1;});
+    const tier={};
+    d.forEach(r=>{const t=getVal(r,'ClassificacaoVeiculo')||getVal(r,'Relevancia')||getVal(r,'Relevância')||'N/A';tier[t]=(tier[t]||0)+1;});
+    return {
+      text:`📰 <strong>Ranking de Veículos</strong><br><br>${sorted.map(([v,n],i)=>`${i+1}. <strong>${v}</strong>: ${n} notícias`).join('<br>')}<br><br><strong>Por tipo de mídia:</strong><br>${Object.entries(midias).map(([k,v])=>`• ${k}: ${v}`).join('<br>')}${Object.keys(tier).length>1?`<br><br><strong>Por Tier:</strong><br>${Object.entries(tier).map(([k,v])=>`• ${k}: ${v}`).join('<br>')}` :''}`,
+      analysis:`${sorted[0]?.[0]} lidera em volume de publicações. ${Object.keys(midias).length>1?`A distribuição por tipo de mídia mostra ${Object.entries(midias).sort((a,b)=>b[1]-a[1])[0][0]} como canal dominante.`:''}`,
+      insights:[
+        `Inicie ou fortaleça o relacionamento com jornalistas de ${sorted[0]?.[0]} — é o veículo mais relevante do seu monitoramento`,
+        `Avalie a qualidade além do volume: veículos com menos notícias mas Tier 1 podem ter maior impacto que veículos de alto volume mas Tier 3`,
+        `Crie um mapa de calor de cobertura — identifique veículos com alto AVE mas baixo volume para estimular mais publicações`
+      ],
+      chartData: singleBar(sorted.slice(0,8).map(x=>x[0].substring(0,12)),sorted.slice(0,8).map(x=>x[1]),'Notícias','rgba(99,179,237,.75)')
+    };
+  }
+
+  // ── TEMPORAL / EVOLUÇÃO ──────────────────────────────────────────────────
+  if(/temporal|evolucao|evolução|periodo|período|mes\b|meses|semana|data|historico|histórico|quando|trend/.test(q)){
+    const dateField=resolveField('DataVeiculacao')||resolveField('Data');
+    if(!dateField)return{text:'Não encontrei campo de data na planilha.',analysis:'Verifique se há coluna DataVeiculacao.',insights:[],chartData:null};
+    const monthly={};
+    scope.forEach(r=>{
+      let dt=parseDate(r);if(!dt)return;
+      const k=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+      monthly[k]=(monthly[k]||0)+1;
+    });
+    const sorted=Object.keys(monthly).sort();
+    const maxMonth=Object.entries(monthly).sort((a,b)=>b[1]-a[1])[0];
+    const minMonth=Object.entries(monthly).sort((a,b)=>a[1]-b[1])[0];
+    const media=sorted.length?Math.round(Object.values(monthly).reduce((a,b)=>a+b,0)/sorted.length):0;
+    return {
+      text:`📅 <strong>Evolução Temporal ${scopeLabel}</strong><br><br>${sorted.map(k=>`• <strong>${k}</strong>: ${monthly[k]} notícias ${monthly[k]>media?'↑':'↓'}`).join('<br>')}<br><br>📈 Pico: <strong>${maxMonth?.[0]}</strong> (${maxMonth?.[1]} notícias)<br>📉 Vale: <strong>${minMonth?.[0]}</strong> (${minMonth?.[1]} notícias)<br>📊 Média: ${media} notícias/mês`,
+      analysis:`A cobertura apresenta sazonalidade com pico em ${maxMonth?.[0]}. O período de menor cobertura foi ${minMonth?.[0]}, com ${minMonth?.[1]} notícias — oportunidade perdida para ocupar espaço midiático.`,
+      insights:[
+        `Investigue os gatilhos do pico em ${maxMonth?.[0]}: se foram positivos, replique o tipo de ação; se negativos, crie plano preventivo`,
+        `Nos meses de baixa cobertura (≤${minMonth?.[1]} notícias), programe pautas proativas para manter presença constante`,
+        `Defina uma cadência mínima de ${Math.max(media,3)} notícias/mês por player como meta de visibilidade da equipe de comunicação`
+      ],
+      chartData: lineChart(sorted,sorted.map(k=>monthly[k]),'Notícias')
+    };
+  }
+
+  // ── TEMAS / ASSUNTOS ──────────────────────────────────────────────────────
+  if(/tema|assunto|topico|tópico|pauta|about|sobre|conteudo|conteúdo/.test(q)){
+    const temaMap={};
+    scope.forEach(r=>{const t=getVal(r,'Temas')||getVal(r,'Tema')||'N/A';temaMap[t]=(temaMap[t]||0)+1;});
+    const sorted=Object.entries(temaMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    return {
+      text:`🏷️ <strong>Temas mais abordados ${scopeLabel}</strong><br><br>${sorted.map(([t,n],i)=>`${i+1}. <strong>${t}</strong>: ${n} notícias (${Math.round(n/scope.length*100)}%)`).join('<br>')}`,
+      analysis:`O tema "${sorted[0]?.[0]}" domina a cobertura, representando ${sorted[0]?Math.round(sorted[0][1]/scope.length*100):0}% das notícias. Isso indica o posicionamento atual das marcas perante a mídia.`,
+      insights:[
+        `Se "${sorted[0]?.[0]}" não é o tema estratégico desejado, desenvolva porta-vozes e pautas nos temas prioritários da agenda corporativa`,
+        `Identifique temas emergentes (crescimento nos últimos meses) e prepare posicionamento antes que se tornem pautas de crise`,
+        `Crie um banco de argumentários e dados por tema para agilizar o atendimento à imprensa em cada assunto relevante`
+      ],
+      chartData: hBar(sorted.slice(0,8).map(x=>x[0].substring(0,20)),sorted.slice(0,8).map(x=>x[1]),'Notícias','rgba(177,134,244,.75)')
+    };
+  }
+
+  // ── PORTA-VOZ ────────────────────────────────────────────────────────────
+  if(/porta.?voz|portavoz|spokesperson|entrevista|declaracao|declaração|fonte/.test(q)){
+    const pvMap={};
+    scope.forEach(r=>{const p=getVal(r,'Porta_Voz')||getVal(r,'PortaVoz')||getVal(r,'Porta-Voz');if(p&&p!=='')pvMap[p]=(pvMap[p]||0)+1;});
+    const sorted=Object.entries(pvMap).filter(([k])=>k&&k!=='N/A'&&k!=='Não'&&k.length>1).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    if(!sorted.length){
+      return{text:`Não foram encontrados dados de porta-voz na base ${scopeLabel}. Verifique se o campo Porta_Voz está preenchido na planilha.`,analysis:'',insights:[`Garanta que o campo Porta_Voz seja preenchido no clipping — é dado fundamental para gestão de porta-vozes`,`Implemente um relatório de performance por porta-voz para identificar os mais eficazes`,`Estabeleça um programa de media training para os porta-vozes com maior exposição`],chartData:null};
+    }
+    return {
+      text:`🎙️ <strong>Porta-Vozes mais citados ${scopeLabel}</strong><br><br>${sorted.map(([pv,n],i)=>`${i+1}. <strong>${pv}</strong>: ${n} menções`).join('<br>')}`,
+      analysis:`${sorted[0]?.[0]} é o porta-voz mais ativo, com ${sorted[0]?.[1]} menções. A concentração em poucos porta-vozes ${sorted.length<3?'pode ser um risco — dependência excessiva de um único perfil':'indica boa distribuição de responsabilidades de comunicação'}.`,
+      insights:[
+        `Avalie o sentimento das notícias por porta-voz — porta-vozes associados a cobertura negativa precisam de media training específico`,
+        `Desenvolva novos porta-vozes em temas técnicos para reduzir a dependência de ${sorted[0]?.[0]} e ampliar a autoridade institucional`,
+        `Crie um programa de visibilidade para porta-vozes com score de presença, sentimento e protagonismo por executivo`
+      ],
+      chartData: singleBar(sorted.map(x=>x[0]),sorted.map(x=>x[1]),'Menções','rgba(118,228,247,.75)')
+    };
+  }
+
+  // ── MOTIVAÇÃO ────────────────────────────────────────────────────────────
+  if(/motivacao|motivação|espontane|espontâne|proativ|reativ|origem|por que|porque|geracao|geração/.test(q)){
+    const motMap={};
+    scope.forEach(r=>{const m=getVal(r,'Motivacao')||getVal(r,'Motivação')||'N/A';motMap[m]=(motMap[m]||0)+1;});
+    const labels=Object.keys(motMap),vals=Object.values(motMap);
+    const esp=scope.filter(r=>(getVal(r,'Motivacao')||getVal(r,'Motivação')||'').toLowerCase().includes('espont')).length;
+    const pro=scope.filter(r=>(getVal(r,'Motivacao')||getVal(r,'Motivação')||'').toLowerCase().includes('proat')).length;
+    const rea=scope.filter(r=>(getVal(r,'Motivacao')||getVal(r,'Motivação')||'').toLowerCase().includes('reat')).length;
+    return {
+      text:`🧭 <strong>Motivação das Notícias ${scopeLabel}</strong><br><br>• 🟢 Espontânea: <strong>${esp}</strong> (${scope.length?Math.round(esp/scope.length*100):0}%)<br>• 🔵 Proativa: <strong>${pro}</strong> (${scope.length?Math.round(pro/scope.length*100):0}%)<br>• 🔴 Reativa: <strong>${rea}</strong> (${scope.length?Math.round(rea/scope.length*100):0}%)`,
+      analysis:`${esp>pro&&esp>rea?'A cobertura espontânea lidera, o que indica que as marcas são naturalmente noticiosas':pro>rea?'As ações proativas da equipe estão gerando boa parte da cobertura — sinal de assessoria eficaz':'A cobertura reativa predomina, indicando que a equipe responde mais do que gera pautas — revisão estratégica necessária'}.`,
+      insights:[
+        `${rea>pro?'Reduza a reatividade desenvolvendo um banco de pautas proativas para os próximos 3 meses':'Mantenha o ritmo de pautas proativas — é o modelo mais eficaz de assessoria de imprensa'}`,
+        `Mapeie os temas da cobertura espontânea para entender o que naturalmente atrai os veículos e reforce esse posicionamento`,
+        `Meta sugerida: 40% proativa / 35% espontânea / 25% reativa — monitore mensalmente e ajuste a estratégia`
+      ],
+      chartData: doughnutChart(labels,vals)
+    };
+  }
+
+  // ── TIER / CLASSIFICAÇÃO DE VEÍCULO ──────────────────────────────────────
+  if(/tier|tier1|tier2|tier3|classificac|classificaç|importancia|importância|nivel|nível|alta|media|baixa/.test(q)){
+    const tierMap={};
+    d.forEach(r=>{const t=getVal(r,'ClassificacaoVeiculo')||getVal(r,'Relevancia')||getVal(r,'Relevância')||'N/A';tierMap[t]=(tierMap[t]||0)+1;});
+    const t1=Object.entries(tierMap).find(([k])=>k.includes('1')||k.toLowerCase().includes('alta'))?.[1]||0;
+    const t2=Object.entries(tierMap).find(([k])=>k.includes('2')||k.toLowerCase().includes('media')||k.toLowerCase().includes('média'))?.[1]||0;
+    const t3=Object.entries(tierMap).find(([k])=>k.includes('3')||k.toLowerCase().includes('baix'))?.[1]||0;
+    const players=allPlayers;
+    const t1Vals=players.map(p=>d.filter(r=>getVal(r,'Player')===p&&((getVal(r,'ClassificacaoVeiculo')||'').includes('1')||(getVal(r,'Relevancia')||getVal(r,'Relevância')||'').toLowerCase().includes('alta'))).length);
+    return {
+      text:`🏅 <strong>Distribuição por Tier de Veículo</strong><br><br>• 🥇 Tier 1 (Alta Relevância): <strong>${t1}</strong> notícias (${d.length?Math.round(t1/d.length*100):0}%)<br>• 🥈 Tier 2 (Média Relevância): <strong>${t2}</strong> notícias (${d.length?Math.round(t2/d.length*100):0}%)<br>• 🥉 Tier 3 (Baixa Relevância): <strong>${t3}</strong> notícias (${d.length?Math.round(t3/d.length*100):0}%)<br><br><strong>Tier 1 por player:</strong><br>${players.map((p,i)=>`• ${p}: ${t1Vals[i]} notícias Tier 1`).join('<br>')}`,
+      analysis:`${t1/d.length>0.3?'Excelente concentração em Tier 1':'A cobertura está concentrada em veículos de menor relevância, o que reduz o impacto real do volume de notícias'}. Veículos Tier 1 têm peso maior no RPS e no AVE.`,
+      insights:[
+        `Foque 70% dos esforços de relacionamento com a imprensa nos ${Object.keys(tierMap).length} veículos Tier 1 — são os que mais movem o RPS`,
+        `Para players com baixo índice de Tier 1, identifique jornalistas-âncora dos principais veículos e construa relacionamento direto`,
+        `Implemente uma política de qualidade: qualquer pauta enviada deve ter potencial de publicação em pelo menos um veículo Tier 1`
+      ],
+      chartData: singleBar(players,t1Vals,'Notícias Tier 1','rgba(246,173,85,.8)')
+    };
+  }
+
+  // ── IMPACTO / ALCANCE ────────────────────────────────────────────────────
+  if(/impacto|alcance|leitores|audiencia|audiência|reach/.test(q)){
+    const players=allPlayers;
+    const impVals=players.map(p=>d.filter(r=>getVal(r,'Player')===p).map(r=>getNumVal(r,'Impacto')).reduce((a,b)=>a+b,0));
+    const total=impVals.reduce((a,b)=>a+b,0);
+    return {
+      text:`👁 <strong>Alcance / Impacto ${scopeLabel}</strong><br><br>${players.map((p,i)=>`• <strong>${p}</strong>: ${impVals[i].toLocaleString('pt-BR')} pessoas`).join('<br>')}<br><br>📊 <strong>Total: ${total.toLocaleString('pt-BR')} pessoas alcançadas</strong>`,
+      analysis:`O alcance total de ${total.toLocaleString('pt-BR')} leitores/espectadores potenciais foi gerado pela cobertura orgânica. ${impVals.every(v=>v===0)?'Verifique se o campo Impacto está preenchido na planilha.':''}`,
+      insights:[
+        `Compare o custo por pessoa alcançada via assessoria vs mídia paga — o resultado demonstra o ROI da comunicação`,
+        `Priorize pautas em veículos de maior impacto para maximizar o alcance por notícia gerada`,
+        `Combine o dado de impacto com o sentimento — alcance positivo é estratégico, alcance negativo é risco reputacional`
+      ],
+      chartData: hBar(players,impVals,'Alcance (pessoas)','rgba(104,211,145,.75)')
+    };
+  }
+
+  // ── JORNALISTAS ──────────────────────────────────────────────────────────
+  if(/jornalist|repórter|reporter|autor|autora|colunista/.test(q)){
+    const jornMap={};
+    scope.forEach(r=>{const j=getVal(r,'Jornalistas')||getVal(r,'IdsJornalistas');if(j&&j!=='')jornMap[j]=(jornMap[j]||0)+1;});
+    const sorted=Object.entries(jornMap).filter(([k])=>k&&k!=='N/A'&&k.length>1).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    if(!sorted.length) return{text:'Não encontrei dados de jornalistas na base. Verifique o campo "Jornalistas" na planilha.',analysis:'',insights:['Preencha o campo Jornalistas no clipping para habilitar análises de relacionamento com imprensa','Priorize o mapeamento dos jornalistas mais ativos em cada veículo estratégico','Desenvolva um CRM de imprensa com os jornalistas identificados nas análises'],chartData:null};
+    return {
+      text:`✍️ <strong>Jornalistas mais ativos ${scopeLabel}</strong><br><br>${sorted.map(([j,n],i)=>`${i+1}. <strong>${j}</strong>: ${n} publicações`).join('<br>')}`,
+      analysis:`${sorted[0]?.[0]} é o jornalista com maior cobertura das marcas monitoradas. Construir um relacionamento sólido com os top 5 jornalistas pode garantir cobertura mais frequente e positiva.`,
+      insights:[
+        `Crie um plano de relacionamento personalizado para os 5 jornalistas mais ativos — briefings exclusivos, encontros informais e acesso prioritário`,
+        `Verifique o sentimento das publicações de cada jornalista — os críticos precisam de estratégia diferenciada`,
+        `Estabeleça uma cadência de contato com os jornalistas do Top 5: ao menos uma interação por mês`
+      ],
+      chartData: singleBar(sorted.map(x=>x[0].split(' ').slice(0,2).join(' ')),sorted.map(x=>x[1]),'Publicações','rgba(251,182,206,.8)')
+    };
+  }
+
+  // ── RESUMO / OVERVIEW ────────────────────────────────────────────────────
+  if(/resumo|overview|geral|sumario|sumário|panorama|situacao|situação|como está|como esta|dashboard/.test(q)){
+    const pos=d.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length;
+    const pct=d.length?Math.round(pos/d.length*100):0;
+    const rpsVals=d.map(r=>getNumVal(r,'RPS')).filter(v=>v>0);
+    const avgRPS=rpsVals.length?(rpsVals.reduce((a,b)=>a+b,0)/rpsVals.length).toFixed(2):0;
+    const totalAVE=d.map(r=>getNumVal(r,'EquivalenciaPublicitaria')||getNumVal(r,'AVE')).reduce((a,b)=>a+b,0);
+    const prot=d.filter(r=>(getVal(r,'Protagonismo')||'').toLowerCase().includes('sim')).length;
+    const midias={};d.forEach(r=>{const m=getVal(r,'Midia')||'Outro';midias[m]=(midias[m]||0)+1;});
+    const topMidia=Object.entries(midias).sort((a,b)=>b[1]-a[1])[0]?.[0]||'N/A';
+    return {
+      text:`📋 <strong>Resumo Executivo da Cobertura</strong><br><br>📰 <strong>${d.length}</strong> notícias · <strong>${allPlayers.length}</strong> players monitorados<br>😊 Sentimento positivo: <strong>${pct}%</strong> (${pos}/${d.length})<br>📈 RPS médio: <strong>${avgRPS}</strong><br>💰 AVE total: <strong>${formatBRL(totalAVE)}</strong><br>🎯 Protagonismo: <strong>${Math.round(prot/d.length*100)}%</strong> (${prot} notícias)<br>📡 Mídia dominante: <strong>${topMidia}</strong><br><br><strong>Players:</strong> ${allPlayers.join(' · ')}`,
+      analysis:`O cenário midiático ${pct>60?'é favorável com maioria positiva':'requer atenção com equilíbrio ou predominância negativa'}. O RPS médio de ${avgRPS} e o AVE de ${formatBRL(totalAVE)} refletem a qualidade e o valor da cobertura gerada.`,
+      insights:[
+        `${pct<60?'Prioridade 1: reversão do sentimento — implemente plano de pauta positiva nas próximas 4 semanas':'Mantenha a estratégia atual e busque ampliar a cobertura em veículos Tier 1 para elevar o RPS'}`,
+        `Apresente o AVE de ${formatBRL(totalAVE)} e o alcance à diretoria como resultado concreto da equipe de comunicação`,
+        `Revise o calendário editorial e inclua ao menos 2 pautas proativas por player por mês para manter a presença constante`
+      ],
+      chartData:{type:'bar',data:{labels:allPlayers,datasets:[
+        {label:'Positivo',data:allPlayers.map(p=>d.filter(r=>getVal(r,'Player')===p&&(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length),backgroundColor:'rgba(104,211,145,.75)',borderRadius:4},
+        {label:'Negativo',data:allPlayers.map(p=>d.filter(r=>getVal(r,'Player')===p&&(getVal(r,'Sentimento')||'').toLowerCase().includes('neg')).length),backgroundColor:'rgba(252,129,129,.75)',borderRadius:4}
+      ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}} }
+    };
+  }
+
+  // ── DEFAULT / AJUDA ──────────────────────────────────────────────────────
+  const rpsVals2=allPlayers.map(p=>{const vals=d.filter(r=>getVal(r,'Player')===p).map(r=>getNumVal(r,'RPS')).filter(v=>v>0);return vals.length?+(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):0;});
+  return {
+    text:`🔍 Encontrei <strong>${d.length} notícias</strong> sobre ${allPlayers.length} players: <strong>${allPlayers.join(', ')}</strong>.<br><br>Posso responder perguntas sobre:<br>• 😊 <em>"Qual o sentimento do Bradesco?"</em><br>• 📈 <em>"Compare o RPS por player"</em><br>• 💰 <em>"Qual o AVE total?"</em><br>• 🎯 <em>"Como está o protagonismo?"</em><br>• 📅 <em>"Mostre a evolução temporal"</em><br>• 📰 <em>"Quais os top veículos?"</em><br>• 🏷️ <em>"Quais os temas mais abordados?"</em><br>• 🎙️ <em>"Quem são os porta-vozes?"</em><br>• 🧭 <em>"Qual a motivação das notícias?"</em><br>• 🏅 <em>"Distribuição por Tier?"</em><br>• 📋 <em>"Dê um resumo geral"</em>`,
+    analysis:`A análise local processa todos os ${d.length} registros diretamente no navegador, sem necessidade de API. Para perguntas livres mais complexas, configure uma API Key em 🔑 Configurações.`,
+    insights:[
+      `Experimente: "Como está o sentimento do Santander?"`,
+      `Experimente: "Quais os veículos com mais publicações?"`,
+      `Experimente: "Dê um resumo geral da cobertura"`
+    ],
+    chartData: hBar(allPlayers,rpsVals2,'RPS Médio','rgba(246,173,85,.75)')
+  };
+}
+
+// ─── LLM SELECTION ────────────────────────────────────────────────────────────
+function selectLlm(id,icon,name){
+  state.selectedLlm=id;
+  state.selectedLlmName=name;
+  document.getElementById('selectedLlmLabel').textContent=icon+' '+name;
+  document.getElementById('statusModel').textContent='LLM: '+name;
+  document.getElementById('chatModelLabel').textContent='Modelo: '+name;
+  document.getElementById('llmDropdown').classList.remove('open');
+  // Sync buttons
+  document.querySelectorAll('.llm-btn').forEach(b=>b.classList.remove('selected'));
+  const btn=document.getElementById('llm-'+id);
+  if(btn)btn.classList.add('selected');
+  showToast('⚡',name+' selecionado');
+}
+
+function selectLlmBtn(el,id,name){
+  state.selectedLlm=id;state.selectedLlmName=name;
+  document.querySelectorAll('.llm-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('statusModel').textContent='LLM: '+name;
+  document.getElementById('chatModelLabel').textContent='Modelo: '+name;
+  document.getElementById('selectedLlmLabel').textContent='⚡ '+name;
+}
+
+function toggleDropdown(){
+  document.getElementById('llmDropdown').classList.toggle('open');
+}
+
+document.addEventListener('click',e=>{
+  const dd=document.getElementById('llmDropdown');
+  if(!dd.contains(e.target))dd.classList.remove('open');
+});
+
+// ─── API KEYS ────────────────────────────────────────────────────────────────
+function openApiModal(){
+  const modal=document.getElementById('apiModal');
+  modal.classList.add('show');
+  ['openai','deepseek','claude','grok','qwen'].forEach(k=>{
+    const el=document.getElementById('key-'+k);
+    if(el&&state.apiKeys[k])el.value=state.apiKeys[k];
+  });
+  // Mostrar nota de ambiente no modal
+  const note = document.getElementById('modal-env-note');
+  if(IS_FILE){
+    note.style.cssText='background:rgba(252,129,129,.07);border:1px solid rgba(252,129,129,.25);color:#fc8181;';
+    note.innerHTML='<strong>📂 Arquivo local detectado</strong> — APIs de LLM são bloqueadas pelo navegador neste modo. <a href="https://github.com" target="_blank" style="color:#fc8181;text-decoration:underline">Hospede no GitHub Pages</a> para usar LLMs reais.';
+  } else {
+    note.style.cssText='background:rgba(104,211,145,.07);border:1px solid rgba(104,211,145,.25);color:#68d391;';
+    note.innerHTML=`<strong>✅ ${location.hostname}</strong> — Ambiente seguro (HTTPS). Todas as APIs suportadas funcionarão.`;
+  }
+}
+
+function initEnvBadge(){
+  const badge = document.getElementById('envBadge');
+  if(!badge) return;
+  if(IS_FILE){
+    badge.style.cssText='display:inline-block;background:rgba(252,129,129,.1);border:1px solid rgba(252,129,129,.3);color:#fc8181;padding:5px 10px;border-radius:6px;font-size:11px;';
+    badge.textContent='📂 Arquivo local · Modo Análise Local';
+  } else if(IS_SECURE){
+    badge.style.cssText='display:inline-block;background:rgba(104,211,145,.1);border:1px solid rgba(104,211,145,.3);color:#68d391;padding:5px 10px;border-radius:6px;font-size:11px;';
+    badge.textContent='🌐 ' + location.hostname + ' · LLM Real disponível';
+  }
+  badge.style.display='inline-block';
+}
+function closeApiModal(){document.getElementById('apiModal').classList.remove('show');}
+function saveApiKeys(){
+  ['openai','deepseek','claude','grok','qwen'].forEach(k=>{
+    const el=document.getElementById('key-'+k);
+    if(el&&el.value.trim())state.apiKeys[k]=el.value.trim();
+  });
+  try{localStorage.setItem('mia_keys',JSON.stringify(state.apiKeys));}catch(e){}
+  closeApiModal();
+  showToast('🔑','Chaves salvas com sucesso!');
+}
+document.getElementById('apiModal').addEventListener('click',e=>{
+  if(e.target===document.getElementById('apiModal'))closeApiModal();
+});
+// Load keys
+try{const k=JSON.parse(localStorage.getItem('mia_keys')||'{}');state.apiKeys=k;}catch(e){}
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+function showToast(icon,msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toastIcon').textContent=icon;
+  document.getElementById('toastMsg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Init LLM default
+selectLlm('claude','🟠','Claude Sonnet');
+// Init environment badge
+initEnvBadge();
+</script>
+</body>
+</html>
