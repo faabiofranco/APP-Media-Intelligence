@@ -1017,7 +1017,7 @@ function renderDashboard(){
   const totalNoticias = data.length;
   const players = getUniqueValues('Player');
   const rpsVals = data.map(r=>getNumVal(r,'RPS')).filter(v=>v>0);
-  const avgRPS = rpsVals.length ? (rpsVals.reduce((a,b)=>a+b,0)/rpsVals.length).toFixed(1) : '—';
+  const totalRPS = rpsVals.length ? rpsVals.reduce((a,b)=>a+b,0).toFixed(0) : '—';
   const aveVals = data.map(r=>getNumVal(r,'EquivalenciaPublicitaria')||getNumVal(r,'AVE')).filter(v=>v>0);
   const totalAVE = aveVals.reduce((a,b)=>a+b,0);
   const positivos = data.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length;
@@ -1030,9 +1030,9 @@ function renderDashboard(){
       <div class="stat-card-sub">${players.length} players monitorados</div>
     </div>
     <div class="stat-card" style="--card-glow:rgba(246,173,85,.1)">
-      <div class="stat-card-label">RPS Médio</div>
-      <div class="stat-card-value" style="color:var(--accent2)">${avgRPS}</div>
-      <div class="stat-card-sub">Relevância · Protagonismo · Sentimento</div>
+      <div class="stat-card-label">RPS Alcançado</div>
+      <div class="stat-card-value" style="color:var(--accent2)">${totalRPS}</div>
+      <div class="stat-card-sub">Soma dos RPS individuais</div>
     </div>
     <div class="stat-card" style="--card-glow:rgba(104,211,145,.1)">
       <div class="stat-card-label">AVE Total</div>
@@ -1063,7 +1063,7 @@ function renderDashboard(){
     </div>
     <div class="chart-card">
       <div class="chart-card-header">
-        <div><div class="chart-card-title">RPS por Player</div><div class="chart-card-sub">Nota média de performance</div></div>
+        <div><div class="chart-card-title">RPS Alcançado por Player</div><div class="chart-card-sub">Soma dos RPS individuais</div></div>
       </div>
       <div class="chart-wrap"><canvas id="c-rps"></canvas></div>
     </div>
@@ -1131,13 +1131,13 @@ function buildMidiaChart(data){
 function buildRPSChart(data){
   const players=getUniqueValues('Player').slice(0,8);
   if(!players.length){buildFallback('c-rps','Sem dados de Player');return;}
-  const avgRps=players.map(p=>{
+  const rpsAlcancado=players.map(p=>{
     const vals=data.filter(r=>getVal(r,'Player')===p).map(r=>getNumVal(r,'RPS')).filter(v=>v>0);
-    return vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):0;
+    return vals.length ? vals.reduce((a,b)=>a+b,0) : 0;
   });
   state.charts['rps']=new Chart(document.getElementById('c-rps'),{
     type:'bar',
-    data:{labels:players,datasets:[{label:'RPS Médio',data:avgRps,backgroundColor:'rgba(99,179,237,.7)',borderRadius:4}]},
+    data:{labels:players,datasets:[{label:'RPS Alcançado',data:rpsAlcancado,backgroundColor:'rgba(99,179,237,.7)',borderRadius:4}]},
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{...CHART_DEFAULTS.plugins},scales:CHART_DEFAULTS.scales}
   });
 }
@@ -1229,7 +1229,7 @@ function updateChatPanel(){
   if(!state.rawData.length)return;
   const players=getUniqueValues('Player');
   const rpsVals=state.rawData.map(r=>getNumVal(r,'RPS')).filter(v=>v>0);
-  const avgRPS=rpsVals.length?(rpsVals.reduce((a,b)=>a+b,0)/rpsVals.length).toFixed(2):0;
+  const totalRPS=rpsVals.length?rpsVals.reduce((a,b)=>a+b,0).toFixed(0):0;
   const aveVals=state.rawData.map(r=>getNumVal(r,'EquivalenciaPublicitaria')||getNumVal(r,'AVE')).filter(v=>v>0);
   const totalAVE=aveVals.reduce((a,b)=>a+b,0);
   const pos=state.rawData.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length;
@@ -1238,7 +1238,7 @@ function updateChatPanel(){
   document.getElementById('panelSummary').innerHTML=`
     <div class="mini-metric"><span class="mini-metric-label">Total notícias</span><span class="mini-metric-val" style="color:var(--accent)">${state.rawData.length}</span></div>
     <div class="mini-metric"><span class="mini-metric-label">Players</span><span class="mini-metric-val">${players.length}</span></div>
-    <div class="mini-metric"><span class="mini-metric-label">RPS Médio</span><span class="mini-metric-val" style="color:var(--accent2)">${avgRPS}</span></div>
+    <div class="mini-metric"><span class="mini-metric-label">RPS Alcançado</span><span class="mini-metric-val" style="color:var(--accent2)">${totalRPS}</span></div>
     <div class="mini-metric"><span class="mini-metric-label">AVE Total</span><span class="mini-metric-val" style="color:var(--accent3)">${formatBRL(totalAVE)}</span></div>
     <div class="mini-metric"><span class="mini-metric-label">% Positivo</span><span class="mini-metric-val">${Math.round((pos/state.rawData.length)*100)}%</span></div>
   `;
@@ -1480,7 +1480,7 @@ function buildDataSummary(){
   const midias={};
   d.forEach(r=>{const m=getVal(r,'Midia')||getVal(r,'Mídia')||'Outro';midias[m]=(midias[m]||0)+1;});
   const rpsVals=d.map(r=>getNumVal(r,'RPS')).filter(v=>v>0);
-  const avgRPS=rpsVals.length?(rpsVals.reduce((a,b)=>a+b,0)/rpsVals.length).toFixed(2):0;
+  const totalRPS=rpsVals.length?rpsVals.reduce((a,b)=>a+b,0).toFixed(0):0;
   const aveVals=d.map(r=>getNumVal(r,'EquivalenciaPublicitaria')||getNumVal(r,'AVE')).filter(v=>v>0);
   const totalAVE=aveVals.reduce((a,b)=>a+b,0);
   const temas=getUniqueValues('Temas').slice(0,10);
@@ -1491,18 +1491,17 @@ function buildDataSummary(){
   const playerStats=players.map(p=>{
     const pd=d.filter(r=>getVal(r,'Player')===p);
     const rps=pd.map(r=>getNumVal(r,'RPS')).filter(v=>v>0);
-    const avgR=rps.length?(rps.reduce((a,b)=>a+b,0)/rps.length).toFixed(2):0;
-    const pos=pd.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length;
-    const ave=pd.map(r=>getNumVal(r,'EquivalenciaPublicitaria')||getNumVal(r,'AVE')).reduce((a,b)=>a+b,0);
-    const prot_=pd.filter(r=>(getVal(r,'Protagonismo')||'').toLowerCase().includes('sim')).length;
-    return `${p}: ${pd.length} notícias | RPS médio ${avgR} | ${pos} positivas (${pd.length?Math.round(pos/pd.length*100):0}%) | Protagonismo: ${prot_} | AVE: R$ ${ave.toFixed(0)}`;
+    const rpsAlc=rps.reduce((a,b)=>a+b,0).toFixed(0);
+    const rpsPot=pd.map(r=>getNumVal(r,'RPS Potencial')).reduce((a,b)=>a+b,0).toFixed(0);
+    const rpsEfic=rpsPot>0?Math.round((rpsAlc/rpsPot)*100)+'%':'N/A';
+    return `${p}: ${pd.length} notícias | RPS Alcançado ${rpsAlc} | RPS Potencial ${rpsPot} | Eficácia ${rpsEfic} | ${pos} positivas (${pd.length?Math.round(pos/pd.length*100):0}%) | Protagonismo: ${prot_} | AVE: R$ ${ave.toFixed(0)}`;
   });
 
   return `BASE DE DADOS DE MONITORAMENTO DE MÍDIA
 Total: ${d.length} notícias
 Players: ${players.join(', ')}
 Campos disponíveis: ${state.headers.join(', ')}
-RPS Médio Geral: ${avgRPS}
+RPS Alcançado Total: ${totalRPS}
 AVE Total: R$ ${totalAVE.toFixed(0)}
 Sentimento: ${JSON.stringify(sentDist)}
 Motivação: ${JSON.stringify(motiv)}
@@ -1702,29 +1701,30 @@ function localAnalyze(question, summary){
   // ── RPS ──────────────────────────────────────────────────────────────────
   if(/\brps\b|relevancia|relevância|pontuacao|pontuação|nota|score/.test(q)){
     const players=allPlayers;
-    const avgVals=players.map(p=>{
-      const vals=d.filter(r=>getVal(r,'Player')===p).map(r=>getNumVal(r,'RPS')).filter(v=>v>0);
-      return vals.length?+(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):0;
-    });
-    const maxV=players[avgVals.indexOf(Math.max(...avgVals))];
-    const minV=players[avgVals.indexOf(Math.min(...avgVals.filter(v=>v>0)))];
-    const potVals=players.map(p=>{
-      const vals=d.filter(r=>getVal(r,'Player')===p).map(r=>getNumVal(r,'RPS Potencial')).filter(v=>v>0);
-      return vals.length?+(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):0;
-    });
-    const eficVals=players.map(p=>{
-      const vals=d.filter(r=>getVal(r,'Player')===p).map(r=>getNumVal(r,'RPS Eficaz')).filter(v=>v>0);
-      return vals.length?+(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):0;
-    });
+    // RPS Alcançado = soma de todos os RPS individuais de cada player
+    const rpsAlc=players.map(p=>
+      d.filter(r=>getVal(r,'Player')===p).map(r=>getNumVal(r,'RPS')).reduce((a,b)=>a+b,0)
+    );
+    const rpsPot=players.map(p=>
+      d.filter(r=>getVal(r,'Player')===p).map(r=>getNumVal(r,'RPS Potencial')).reduce((a,b)=>a+b,0)
+    );
+    const rpsEfic=players.map((p,i)=>
+      rpsPot[i]>0 ? Math.round((rpsAlc[i]/rpsPot[i])*100) : null
+    );
+    const maxIdx=rpsAlc.indexOf(Math.max(...rpsAlc));
+    const minIdx=rpsAlc.indexOf(Math.min(...rpsAlc.filter(v=>v>0)));
+    const maxV=players[maxIdx];
+    const minV=players[minIdx];
+    const total=rpsAlc.reduce((a,b)=>a+b,0);
     return {
-      text:`📈 <strong>RPS por Player</strong><br><br>${players.map((p,i)=>`• <strong>${p}</strong>: RPS <span style="color:var(--accent2)">${avgVals[i]}</span>${potVals[i]>0?` / Potencial: ${potVals[i]}`:''}`).join('<br>')}<br><br>🏆 Maior RPS: <strong>${maxV}</strong> · ⚠️ Menor: <strong>${minV}</strong>`,
-      analysis:`${maxV} lidera o ranking de qualidade midiática com o maior RPS médio, indicando cobertura em veículos estratégicos com protagonismo e sentimento positivo. ${minV} apresenta o menor índice e deve ser prioridade na estratégia de relacionamento com a imprensa.`,
+      text:`📈 <strong>RPS Alcançado por Player</strong><br><span style="font-size:12px;color:var(--text3)">(Soma dos RPS individuais de cada notícia)</span><br><br>${players.map((p,i)=>`• <strong>${p}</strong>: <span style="color:var(--accent2)">${rpsAlc[i].toFixed(0)}</span>${rpsPot[i]>0?` / Potencial: ${rpsPot[i].toFixed(0)} · Eficácia: ${rpsEfic[i]}%`:''}`).join('<br>')}<br><br>🏆 Maior RPS Alcançado: <strong>${maxV}</strong> (${rpsAlc[maxIdx].toFixed(0)})<br>📊 Total geral: <strong>${total.toFixed(0)}</strong>`,
+      analysis:`${maxV} lidera o ranking de RPS Alcançado com ${rpsAlc[maxIdx].toFixed(0)} pontos — resultado da soma de todos os RPS individuais das suas notícias. ${minV} apresenta o menor índice e deve ser prioridade na estratégia de relacionamento com a imprensa.`,
       insights:[
-        `Analise as notícias de alto RPS de ${maxV} e replique a estratégia de abordagem e posicionamento para os demais players`,
-        `Foque o relacionamento de ${minV} em veículos Tier 1 — a qualidade do veículo é o fator de maior peso no RPS`,
-        `Inclua metas de RPS mínimo (ex: ${(Math.max(...avgVals)*0.8).toFixed(1)}) nos acordos de nível de serviço da equipe de assessoria`
+        `Aumente o RPS Alcançado de ${minV} priorizando veículos Tier 1 — cada notícia em veículo de alta relevância gera RPS individual maior`,
+        `Analise as notícias de maior RPS individual de ${maxV} para replicar o tipo de pauta, veículo e enquadramento`,
+        `Inclua metas de RPS Alcançado nos KPIs mensais — o total acumulado reflete o esforço e a qualidade da cobertura gerada`
       ],
-      chartData: hBar(players,avgVals,'RPS Médio','rgba(246,173,85,.75)')
+      chartData: hBar(players, rpsAlc.map(v=>+v.toFixed(0)), 'RPS Alcançado', 'rgba(246,173,85,.75)')
     };
   }
 
@@ -1935,14 +1935,14 @@ function localAnalyze(question, summary){
     const pos=d.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length;
     const pct=d.length?Math.round(pos/d.length*100):0;
     const rpsVals=d.map(r=>getNumVal(r,'RPS')).filter(v=>v>0);
-    const avgRPS=rpsVals.length?(rpsVals.reduce((a,b)=>a+b,0)/rpsVals.length).toFixed(2):0;
+    const totalRPS=rpsVals.length?rpsVals.reduce((a,b)=>a+b,0).toFixed(0):0;
     const totalAVE=d.map(r=>getNumVal(r,'EquivalenciaPublicitaria')||getNumVal(r,'AVE')).reduce((a,b)=>a+b,0);
     const prot=d.filter(r=>(getVal(r,'Protagonismo')||'').toLowerCase().includes('sim')).length;
     const midias={};d.forEach(r=>{const m=getVal(r,'Midia')||'Outro';midias[m]=(midias[m]||0)+1;});
     const topMidia=Object.entries(midias).sort((a,b)=>b[1]-a[1])[0]?.[0]||'N/A';
     return {
-      text:`📋 <strong>Resumo Executivo da Cobertura</strong><br><br>📰 <strong>${d.length}</strong> notícias · <strong>${allPlayers.length}</strong> players monitorados<br>😊 Sentimento positivo: <strong>${pct}%</strong> (${pos}/${d.length})<br>📈 RPS médio: <strong>${avgRPS}</strong><br>💰 AVE total: <strong>${formatBRL(totalAVE)}</strong><br>🎯 Protagonismo: <strong>${Math.round(prot/d.length*100)}%</strong> (${prot} notícias)<br>📡 Mídia dominante: <strong>${topMidia}</strong><br><br><strong>Players:</strong> ${allPlayers.join(' · ')}`,
-      analysis:`O cenário midiático ${pct>60?'é favorável com maioria positiva':'requer atenção com equilíbrio ou predominância negativa'}. O RPS médio de ${avgRPS} e o AVE de ${formatBRL(totalAVE)} refletem a qualidade e o valor da cobertura gerada.`,
+      text:`📋 <strong>Resumo Executivo da Cobertura</strong><br><br>📰 <strong>${d.length}</strong> notícias · <strong>${allPlayers.length}</strong> players monitorados<br>😊 Sentimento positivo: <strong>${pct}%</strong> (${pos}/${d.length})<br>📈 RPS Alcançado: <strong>${totalRPS}</strong><br>💰 AVE total: <strong>${formatBRL(totalAVE)}</strong><br>🎯 Protagonismo: <strong>${Math.round(prot/d.length*100)}%</strong> (${prot} notícias)<br>📡 Mídia dominante: <strong>${topMidia}</strong><br><br><strong>Players:</strong> ${allPlayers.join(' · ')}`,
+      analysis:`O cenário midiático ${pct>60?'é favorável com maioria positiva':'requer atenção com equilíbrio ou predominância negativa'}. O RPS Alcançado de ${totalRPS} pontos (soma de todos os RPS individuais) e o AVE de ${formatBRL(totalAVE)} refletem a qualidade e o valor da cobertura gerada.`,
       insights:[
         `${pct<60?'Prioridade 1: reversão do sentimento — implemente plano de pauta positiva nas próximas 4 semanas':'Mantenha a estratégia atual e busque ampliar a cobertura em veículos Tier 1 para elevar o RPS'}`,
         `Apresente o AVE de ${formatBRL(totalAVE)} e o alcance à diretoria como resultado concreto da equipe de comunicação`,
@@ -1956,7 +1956,7 @@ function localAnalyze(question, summary){
   }
 
   // ── DEFAULT / AJUDA ──────────────────────────────────────────────────────
-  const rpsVals2=allPlayers.map(p=>{const vals=d.filter(r=>getVal(r,'Player')===p).map(r=>getNumVal(r,'RPS')).filter(v=>v>0);return vals.length?+(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):0;});
+  const rpsAlc2=allPlayers.map(p=>d.filter(r=>getVal(r,'Player')===p).map(r=>getNumVal(r,'RPS')).reduce((a,b)=>a+b,0));
   return {
     text:`🔍 Encontrei <strong>${d.length} notícias</strong> sobre ${allPlayers.length} players: <strong>${allPlayers.join(', ')}</strong>.<br><br>Posso responder perguntas sobre:<br>• 😊 <em>"Qual o sentimento do Bradesco?"</em><br>• 📈 <em>"Compare o RPS por player"</em><br>• 💰 <em>"Qual o AVE total?"</em><br>• 🎯 <em>"Como está o protagonismo?"</em><br>• 📅 <em>"Mostre a evolução temporal"</em><br>• 📰 <em>"Quais os top veículos?"</em><br>• 🏷️ <em>"Quais os temas mais abordados?"</em><br>• 🎙️ <em>"Quem são os porta-vozes?"</em><br>• 🧭 <em>"Qual a motivação das notícias?"</em><br>• 🏅 <em>"Distribuição por Tier?"</em><br>• 📋 <em>"Dê um resumo geral"</em>`,
     analysis:`A análise local processa todos os ${d.length} registros diretamente no navegador, sem necessidade de API. Para perguntas livres mais complexas, configure uma API Key em 🔑 Configurações.`,
@@ -1965,7 +1965,7 @@ function localAnalyze(question, summary){
       `Experimente: "Quais os veículos com mais publicações?"`,
       `Experimente: "Dê um resumo geral da cobertura"`
     ],
-    chartData: hBar(allPlayers,rpsVals2,'RPS Médio','rgba(246,173,85,.75)')
+    chartData: hBar(allPlayers, rpsAlc2.map(v=>+v.toFixed(0)), 'RPS Alcançado', 'rgba(246,173,85,.75)')
   };
 }
 
