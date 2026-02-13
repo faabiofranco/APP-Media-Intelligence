@@ -757,18 +757,18 @@
 
         <div class="chat-input-area">
           <div class="quick-questions" id="quickQuestions">
+            <div class="quick-q" onclick="useQuickQ(this)">📊 Share of Voice</div>
             <div class="quick-q" onclick="useQuickQ(this)">📋 Resumo geral</div>
             <div class="quick-q" onclick="useQuickQ(this)">😊 Sentimento por player</div>
             <div class="quick-q" onclick="useQuickQ(this)">📈 RPS por player</div>
-            <div class="quick-q" onclick="useQuickQ(this)">📰 Top veículos</div>
-            <div class="quick-q" onclick="useQuickQ(this)">📅 Evolução temporal</div>
             <div class="quick-q" onclick="useQuickQ(this)">💰 AVE total</div>
+            <div class="quick-q" onclick="useQuickQ(this)">📅 Melhor dia para releases</div>
+            <div class="quick-q" onclick="useQuickQ(this)">🔴 Temas negativos</div>
+            <div class="quick-q" onclick="useQuickQ(this)">🎙️ Porta-vozes em matérias positivas</div>
+            <div class="quick-q" onclick="useQuickQ(this)">🏅 Presença em veículos Tier 1</div>
+            <div class="quick-q" onclick="useQuickQ(this)">📰 Top veículos</div>
             <div class="quick-q" onclick="useQuickQ(this)">🎯 Protagonismo</div>
-            <div class="quick-q" onclick="useQuickQ(this)">🏷️ Temas abordados</div>
             <div class="quick-q" onclick="useQuickQ(this)">🧭 Motivação das notícias</div>
-            <div class="quick-q" onclick="useQuickQ(this)">🎙️ Porta-vozes</div>
-            <div class="quick-q" onclick="useQuickQ(this)">🏅 Distribuição por Tier</div>
-            <div class="quick-q" onclick="useQuickQ(this)">✍️ Jornalistas ativos</div>
           </div>
           <div class="chat-input-row">
             <textarea class="chat-textarea" id="chatInput" placeholder="Ex: Qual o sentimento médio do Bradesco nos últimos 30 dias?" rows="1" onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
@@ -1472,61 +1472,179 @@ function addInlineWarning(html, bg, border, color){
 }
 
 function buildDataSummary(){
-  const d=state.rawData;
-  if(!d.length)return'Sem dados.';
-  const players=getUniqueValues('Player').slice(0,10);
-  const sentDist={};
-  d.forEach(r=>{const s=getVal(r,'Sentimento')||'N/A';sentDist[s]=(sentDist[s]||0)+1;});
-  const midias={};
-  d.forEach(r=>{const m=getVal(r,'Midia')||getVal(r,'Mídia')||'Outro';midias[m]=(midias[m]||0)+1;});
-  const rpsVals=d.map(r=>getNumVal(r,'RPS')).filter(v=>v>0);
-  const totalRPS=rpsVals.length?rpsVals.reduce((a,b)=>a+b,0).toFixed(0):0;
-  const aveVals=d.map(r=>getNumVal(r,'EquivalenciaPublicitaria')||getNumVal(r,'AVE')).filter(v=>v>0);
-  const totalAVE=aveVals.reduce((a,b)=>a+b,0);
-  const temas=getUniqueValues('Temas').slice(0,10);
-  const prot=d.filter(r=>(getVal(r,'Protagonismo')||'').toLowerCase().includes('sim')).length;
-  const motiv={};
-  d.forEach(r=>{const m=getVal(r,'Motivação')||getVal(r,'Motivacao')||'N/A';motiv[m]=(motiv[m]||0)+1;});
+  const d = state.rawData;
+  if(!d.length) return 'Sem dados.';
 
-  const playerStats=players.map(p=>{
-    const pd=d.filter(r=>getVal(r,'Player')===p);
-    const rps=pd.map(r=>getNumVal(r,'RPS')).filter(v=>v>0);
-    const rpsAlc=rps.reduce((a,b)=>a+b,0).toFixed(0);
-    const rpsPot=pd.map(r=>getNumVal(r,'RPS Potencial')).reduce((a,b)=>a+b,0).toFixed(0);
-    const rpsEfic=rpsPot>0?Math.round((rpsAlc/rpsPot)*100)+'%':'N/A';
-    return `${p}: ${pd.length} notícias | RPS Alcançado ${rpsAlc} | RPS Potencial ${rpsPot} | Eficácia ${rpsEfic} | ${pos} positivas (${pd.length?Math.round(pos/pd.length*100):0}%) | Protagonismo: ${prot_} | AVE: R$ ${ave.toFixed(0)}`;
+  const players = getUniqueValues('Player').slice(0,12);
+  const totalAVE = d.map(r=>getNumVal(r,'EquivalenciaPublicitaria')||getNumVal(r,'AVE')).reduce((a,b)=>a+b,0);
+  const totalRPS = d.map(r=>getNumVal(r,'RPS')).reduce((a,b)=>a+b,0).toFixed(0);
+
+  // ── Stats por player ─────────────────────────────────────────────────────
+  const playerStats = players.map(p=>{
+    const pd = d.filter(r=>getVal(r,'Player')===p);
+    const pos = pd.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length;
+    const neg = pd.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('neg')).length;
+    const prot = pd.filter(r=>(getVal(r,'Protagonismo')||'').toLowerCase().includes('sim')).length;
+    const rpsAlc = pd.map(r=>getNumVal(r,'RPS')).reduce((a,b)=>a+b,0).toFixed(0);
+    const rpsPot = pd.map(r=>getNumVal(r,'RPS Potencial')).reduce((a,b)=>a+b,0).toFixed(0);
+    const ave = pd.map(r=>getNumVal(r,'EquivalenciaPublicitaria')||getNumVal(r,'AVE')).reduce((a,b)=>a+b,0).toFixed(0);
+    const sov = d.length ? Math.round((pd.length/d.length)*100) : 0;
+    // Tier 1
+    const tier1 = pd.filter(r=>{const t=(getVal(r,'ClassificacaoVeiculo')||getVal(r,'Relevancia')||getVal(r,'Relevância')||'').toLowerCase(); return t.includes('1')||t.includes('alta');}).length;
+    // Top temas deste player
+    const temasP={};
+    pd.forEach(r=>{const t=getVal(r,'Temas')||getVal(r,'Tema');if(t)temasP[t]=(temasP[t]||0)+1;});
+    const topTemasP=Object.entries(temasP).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([t,n])=>`${t}(${n})`).join(', ');
+    // Porta-vozes
+    const pvP={};
+    pd.forEach(r=>{const pv=getVal(r,'Porta_Voz')||getVal(r,'PortaVoz')||getVal(r,'Porta-Voz');if(pv&&pv.length>1)pvP[pv]=(pvP[pv]||0)+1;});
+    const topPvP=Object.entries(pvP).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([pv,n])=>`${pv}(${n})`).join(', ')||'N/A';
+    // Motivação
+    const motP={};
+    pd.forEach(r=>{const m=getVal(r,'Motivação')||getVal(r,'Motivacao');if(m)motP[m]=(motP[m]||0)+1;});
+    const esp=motP[Object.keys(motP).find(k=>k.toLowerCase().includes('espont'))||'']||0;
+    const pro=motP[Object.keys(motP).find(k=>k.toLowerCase().includes('proat'))||'']||0;
+    // Top veículos
+    const veicP={};
+    pd.forEach(r=>{const v=getVal(r,'Veiculo');if(v)veicP[v]=(veicP[v]||0)+1;});
+    const topVeicP=Object.entries(veicP).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([v,n])=>`${v}(${n})`).join(', ')||'N/A';
+    return `PLAYER: ${p}
+  Total notícias: ${pd.length} | Share of Voice: ${sov}%
+  Sentimento: ${pos} positivas / ${neg} negativas / ${pd.length-pos-neg} neutras
+  Protagonismo: ${prot} sim (${pd.length?Math.round(prot/pd.length*100):0}%) / ${pd.length-prot} não
+  RPS Alcançado: ${rpsAlc} | RPS Potencial: ${rpsPot}
+  AVE: R$ ${ave}
+  Tier 1: ${tier1} notícias
+  Motivação: ${esp} espontâneas / ${pro} proativas
+  Top Temas: ${topTemasP||'N/A'}
+  Top Porta-vozes: ${topPvP}
+  Top Veículos: ${topVeicP}`;
   });
 
-  return `BASE DE DADOS DE MONITORAMENTO DE MÍDIA
-Total: ${d.length} notícias
-Players: ${players.join(', ')}
+  // ── Distribuição temporal mensal ─────────────────────────────────────────
+  const monthly={};
+  d.forEach(r=>{
+    const dt=parseDate(r);if(!dt)return;
+    const k=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+    monthly[k]=(monthly[k]||0)+1;
+  });
+  const monthlyStr=Object.entries(monthly).sort((a,b)=>a[0].localeCompare(b[0])).map(([k,v])=>`${k}:${v}`).join(', ');
+
+  // ── Sentimento por mês (geral) ───────────────────────────────────────────
+  const sentByMonth={};
+  d.forEach(r=>{
+    const dt=parseDate(r);if(!dt)return;
+    const k=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+    if(!sentByMonth[k])sentByMonth[k]={pos:0,neg:0,neu:0};
+    const s=(getVal(r,'Sentimento')||'').toLowerCase();
+    if(s.includes('pos'))sentByMonth[k].pos++;
+    else if(s.includes('neg'))sentByMonth[k].neg++;
+    else sentByMonth[k].neu++;
+  });
+  const sentMonthStr=Object.entries(sentByMonth).sort((a,b)=>a[0].localeCompare(b[0]))
+    .map(([k,v])=>`${k}: +${v.pos}/-${v.neg}/~${v.neu}`).join(', ');
+
+  // ── Top temas globais ────────────────────────────────────────────────────
+  const temasG={};
+  d.forEach(r=>{const t=getVal(r,'Temas')||getVal(r,'Tema');if(t)temasG[t]=(temasG[t]||0)+1;});
+  const topTemas=Object.entries(temasG).sort((a,b)=>b[1]-a[1]).slice(0,15).map(([t,n])=>`${t}(${n})`).join(', ');
+
+  // ── Top veículos globais ─────────────────────────────────────────────────
+  const veicG={};
+  d.forEach(r=>{const v=getVal(r,'Veiculo');if(v)veicG[v]=(veicG[v]||0)+1;});
+  const topVeic=Object.entries(veicG).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([v,n])=>`${v}(${n})`).join(', ');
+
+  // ── Top porta-vozes globais ──────────────────────────────────────────────
+  const pvG={};
+  d.forEach(r=>{const pv=getVal(r,'Porta_Voz')||getVal(r,'PortaVoz')||getVal(r,'Porta-Voz');if(pv&&pv.length>1)pvG[pv]=(pvG[pv]||0)+1;});
+  const topPv=Object.entries(pvG).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([pv,n])=>`${pv}(${n})`).join(', ')||'N/A';
+
+  // ── Dia da semana ────────────────────────────────────────────────────────
+  const dias=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const diasCount=[0,0,0,0,0,0,0];
+  d.forEach(r=>{const dt=parseDate(r);if(dt)diasCount[dt.getDay()]++;});
+  const diasStr=dias.map((d,i)=>`${d}:${diasCount[i]}`).join(', ');
+
+  // ── Tier distribution ────────────────────────────────────────────────────
+  const tierG={};
+  d.forEach(r=>{const t=getVal(r,'ClassificacaoVeiculo')||getVal(r,'Relevancia')||getVal(r,'Relevância')||'N/A';tierG[t]=(tierG[t]||0)+1;});
+
+  // ── Amostra de notícias (últimas 80 para o LLM pesquisar) ────────────────
+  const dateField=resolveField('DataVeiculacao')||resolveField('Data');
+  const sorted=[...d].sort((a,b)=>{
+    const da=parseDate(a)||new Date(0), db=parseDate(b)||new Date(0);
+    return db-da;
+  });
+  const sample=sorted.slice(0,80).map(r=>{
+    const dt=parseDate(r);
+    return `[${dt?dt.toISOString().slice(0,10):'?'}] Player:${getVal(r,'Player')||'?'} | Veículo:${getVal(r,'Veiculo')||'?'} | Midia:${getVal(r,'Midia')||'?'} | Tier:${getVal(r,'ClassificacaoVeiculo')||getVal(r,'Relevancia')||getVal(r,'Relevância')||'?'} | Sent:${getVal(r,'Sentimento')||'?'} | Prot:${getVal(r,'Protagonismo')||'?'} | Tema:${getVal(r,'Temas')||getVal(r,'Tema')||'?'} | RPS:${getNumVal(r,'RPS')||0} | AVE:${getNumVal(r,'EquivalenciaPublicitaria')||getNumVal(r,'AVE')||0} | PV:${getVal(r,'Porta_Voz')||getVal(r,'PortaVoz')||getVal(r,'Porta-Voz')||'-'} | Titulo:${(getVal(r,'Titulo')||getVal(r,'Título')||'').substring(0,60)}`;
+  }).join('\n');
+
+  return `=== BASE DE DADOS: MONITORAMENTO DE MÍDIA ===
 Campos disponíveis: ${state.headers.join(', ')}
+Total de notícias: ${d.length}
+Período: ${Object.keys(monthly).sort()[0]||'?'} a ${Object.keys(monthly).sort().slice(-1)[0]||'?'}
+Players monitorados: ${players.join(', ')}
 RPS Alcançado Total: ${totalRPS}
 AVE Total: R$ ${totalAVE.toFixed(0)}
-Sentimento: ${JSON.stringify(sentDist)}
-Motivação: ${JSON.stringify(motiv)}
-Mídias: ${JSON.stringify(midias)}
-Temas: ${temas.join(', ')}
-Protagonismo: ${prot} de ${d.length} (${Math.round(prot/d.length*100)}%)
-Stats por Player:
-${playerStats.join('\n')}`;
+Tiers: ${JSON.stringify(tierG)}
+Distribuição por mês: ${monthlyStr}
+Sentimento por mês (pos/neg/neu): ${sentMonthStr}
+Top Temas globais: ${topTemas}
+Top Veículos globais: ${topVeic}
+Top Porta-vozes globais: ${topPv}
+Distribuição por dia da semana: ${diasStr}
+
+=== STATS DETALHADOS POR PLAYER ===
+${playerStats.join('\n\n')}
+
+=== AMOSTRA DAS 80 NOTÍCIAS MAIS RECENTES ===
+${sample}`;
 }
 
 async function callLLM(question, context, apiKey){
   const llm = state.selectedLlm;
 
-  const sysPrompt = `Você é um especialista em Inteligência de Mídia e Comunicação Corporativa brasileiro. Analise os dados de monitoramento de mídia e responda em português do Brasil.
+  const sysPrompt = `Você é um especialista sênior em Inteligência de Mídia e Comunicação Corporativa brasileiro. Você recebe dados reais de monitoramento de mídia e deve responder qualquer pergunta analítica sobre eles em português do Brasil.
 
-Responda SEMPRE com um objeto JSON válido (sem markdown, sem blocos de código) exatamente neste formato:
+CAPACIDADES:
+- Calcular Share of Voice (% de menções de um player vs total ou vs concorrentes específicos)
+- Analisar evolução temporal filtrando por player, tema, sentimento, período (mês, trimestre, último mês)
+- Comparar players entre si em qualquer métrica
+- Identificar temas negativos/positivos por player ou período
+- Analisar porta-vozes por tipo de cobertura (positiva, negativa, tema)
+- Ranking de veículos por player, por destaque, por tier
+- Detectar temas emergentes ou em declínio
+- Analisar melhor dia/horário para releases (frequência por dia da semana)
+- Buscar notícias que mencionam termos específicos (buscar no campo Titulo)
+- Calcular ROI/AVE por campanha ou tema
+- Comparar concorrentes em temas específicos
+- Analisar executivos/porta-vozes com melhor performance
+
+INSTRUÇÕES DE ANÁLISE:
+- Share of Voice: (noticias_player / total_noticias) * 100 ou relativo aos players mencionados
+- "Último mês" = mês mais recente nos dados
+- "Janeiro" ou qualquer mês nomeado = filtrar pelo mês correspondente nos dados disponíveis
+- "Trimestre" = últimos 3 meses nos dados
+- Para comparações, sempre apresentar os números absolutos E percentuais
+- Para temas negativos: filtrar Sentimento=Negativo e agrupar por Temas
+- Para porta-vozes positivos: filtrar Sentimento=Positivo e agrupar por Porta_Voz
+- "Destaque" ou "manchete" = filtrar Espaço=Principal ou Protagonismo=SIM
+- Para dia/horário: agrupar DataVeiculacao por dia da semana
+
+FORMATO DE RESPOSTA: JSON válido sem markdown. Exatamente:
 {
-  "text": "Resposta direta com dados específicos em HTML simples (use <strong>, <br>, <span>)",
-  "chartType": "bar|line|doughnut|pie|horizontalBar ou null se não aplicável",
+  "text": "HTML com <strong>, <br>, <span style='color:#68d391'> para positivo, <span style='color:#fc8181'> para negativo",
+  "chartType": "bar|line|doughnut|pie|horizontalBar ou null",
   "chartLabels": ["label1","label2"],
   "chartValues": [10, 20],
-  "chartLabel": "Nome da série de dados",
-  "analysis": "Análise estratégica contextualizada em 2-3 frases",
-  "insights": ["Ação concreta 1","Ação concreta 2","Ação concreta 3"]
-}`;
+  "chartLabel": "Nome da série",
+  "chartDatasets": null,
+  "analysis": "2-3 frases de análise estratégica contextualizada",
+  "insights": ["Ação concreta baseada nos dados 1","Ação 2","Ação 3"]
+}
+Para múltiplas séries (ex: comparativo), use chartDatasets ao invés de chartValues:
+"chartDatasets": [{"label":"Serie1","data":[1,2],"backgroundColor":"#63b3ed"},{"label":"Serie2","data":[3,4],"backgroundColor":"#fc8181"}]`;
 
   const userMsg = `DADOS DE MONITORAMENTO:\n${context}\n\nPERGUNTA DO USUÁRIO: ${question}`;
 
@@ -1603,27 +1721,46 @@ Responda SEMPRE com um objeto JSON válido (sem markdown, sem blocos de código)
 
 function buildResultFromParsed(p){
   let chartData=null;
-  if(p.chartType && p.chartLabels && p.chartValues){
-    const colors=['#63b3ed','#f6ad55','#68d391','#fc8181','#b794f4','#76e4f7','#fbb6ce'];
+  const colors=['#63b3ed','#f6ad55','#68d391','#fc8181','#b794f4','#76e4f7','#fbb6ce','#c3dafe'];
+
+  if(p.chartType && (p.chartDatasets || (p.chartLabels && p.chartValues))){
     const type=p.chartType==='horizontalBar'?'bar':p.chartType;
-    chartData={
+    let datasets;
+
+    if(p.chartDatasets && p.chartDatasets.length){
+      // Multi-series response from LLM
+      datasets = p.chartDatasets.map((ds,i)=>({
+        label: ds.label||`Série ${i+1}`,
+        data: ds.data||[],
+        backgroundColor: ds.backgroundColor||colors[i%colors.length],
+        borderColor: ds.borderColor||(type==='line'?colors[i%colors.length]:undefined),
+        borderRadius: type==='bar'?4:undefined,
+        fill: type==='line'?false:undefined,
+        tension: type==='line'?.4:undefined,
+        pointRadius: type==='line'?3:undefined,
+      }));
+    } else {
+      // Single series
+      datasets = [{
+        label: p.chartLabel||'Dados',
+        data: p.chartValues,
+        backgroundColor: type==='line'?'rgba(99,179,237,.1)':p.chartLabels.map((_,i)=>colors[i%colors.length]),
+        borderColor: type==='line'?'#63b3ed':undefined,
+        borderRadius: type==='bar'?4:undefined,
+        fill: type==='line'?true:undefined,
+        tension: type==='line'?.4:undefined,
+        pointRadius: type==='line'?3:undefined,
+        pointBackgroundColor: type==='line'?'#63b3ed':undefined,
+      }];
+    }
+
+    chartData = {
       type,
-      data:{
-        labels:p.chartLabels,
-        datasets:[{
-          label:p.chartLabel||'Dados',
-          data:p.chartValues,
-          backgroundColor:type==='line'?'rgba(99,179,237,.1)':p.chartLabels.map((_,i)=>colors[i%colors.length]),
-          borderColor:type==='line'?'#63b3ed':undefined,
-          borderRadius:type==='bar'?4:undefined,
-          fill:type==='line'?true:undefined,
-          tension:type==='line'?.4:undefined
-        }]
-      },
+      data:{ labels: p.chartLabels||[], datasets },
       options:{
-        indexAxis:p.chartType==='horizontalBar'?'y':'x',
-        responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}},
+        indexAxis: p.chartType==='horizontalBar'?'y':'x',
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ labels:{ color:'#8892ab', font:{size:11} } } },
         scales:(type==='doughnut'||type==='pie')?undefined:{
           x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},
           y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}
@@ -1659,6 +1796,62 @@ function parseDate(row){
   const v=row[f];if(!v)return null;
   let dt=typeof v==='number'?new Date((v-25569)*86400000):new Date(v);
   return isNaN(dt)?null:dt;
+}
+
+// ─── PERIOD FILTER HELPERS ────────────────────────────────────────────────────
+const MONTHS_PT = {janeiro:0,fevereiro:1,marco:2,março:2,abril:3,maio:4,junho:5,julho:6,agosto:7,setembro:8,outubro:9,novembro:10,dezembro:11};
+
+function filterByPeriod(data, q){
+  const now = new Date();
+  // "último mês" = mês mais recente nos dados
+  const allDates = data.map(r=>parseDate(r)).filter(Boolean);
+  const maxDate = allDates.length ? new Date(Math.max(...allDates)) : now;
+
+  if(/ultimo mes|último mes|ultimo mês|último mês/.test(q)){
+    return data.filter(r=>{
+      const dt=parseDate(r);if(!dt)return false;
+      return dt.getFullYear()===maxDate.getFullYear()&&dt.getMonth()===maxDate.getMonth();
+    });
+  }
+  if(/ultimo trimestre|último trimestre|ultimos 3 meses|últimos 3 meses/.test(q)){
+    const limit=new Date(maxDate);limit.setMonth(limit.getMonth()-3);
+    return data.filter(r=>{const dt=parseDate(r);return dt&&dt>=limit;});
+  }
+  if(/ultimas 4 semanas|últimas 4 semanas|ultimo mes|último mês/.test(q)){
+    const limit=new Date(maxDate);limit.setDate(limit.getDate()-28);
+    return data.filter(r=>{const dt=parseDate(r);return dt&&dt>=limit;});
+  }
+  // Mês nomeado: "em janeiro", "de fevereiro", etc.
+  for(const [name,idx] of Object.entries(MONTHS_PT)){
+    if(q.includes(name)){
+      // Tenta encontrar o ano ou usa o mais recente com esse mês
+      const yearMatch=q.match(/\b(20\d\d)\b/);
+      return data.filter(r=>{
+        const dt=parseDate(r);if(!dt)return false;
+        if(yearMatch)return dt.getMonth()===idx&&dt.getFullYear()===parseInt(yearMatch[1]);
+        return dt.getMonth()===idx;
+      });
+    }
+  }
+  return data; // sem filtro
+}
+
+function getPeriodLabel(q){
+  if(/ultimo mes|último mes|ultimo mês|último mês/.test(q)) return 'último mês';
+  if(/ultimo trimestre|último trimestre/.test(q)) return 'último trimestre';
+  for(const name of Object.keys(MONTHS_PT)){
+    if(q.includes(name)) return name.charAt(0).toUpperCase()+name.slice(1);
+  }
+  return '';
+}
+
+function extractKeywords(q){
+  // Remove stop words e extrai termos relevantes
+  const stop=/^(qual|como|quando|onde|quais|mostre|liste|analise|analisar|foram|mais|menos|entre|sobre|para|que|dos|das|do|da|de|em|no|na|o|a|os|as|e|ou|se|um|uma|uns|umas|por|com|sem)$/;
+  return q.split(/\s+/)
+    .map(w=>w.replace(/[^a-záéíóúâêîôûãõàèìòùç]/gi,''))
+    .filter(w=>w.length>3&&!stop.test(w))
+    .slice(0,3);
 }
 
 // Detect if question mentions a specific player
@@ -1955,16 +2148,224 @@ function localAnalyze(question, summary){
     };
   }
 
+  // ── SHARE OF VOICE ────────────────────────────────────────────────────────
+  if(/share.?of.?voice|sov|participacao|participação|fatia|percentual de menc/.test(q)){
+    // Detecta se é relativo a um período específico
+    const scopeData = filterByPeriod(d, q);
+    const periodLabel = getPeriodLabel(q);
+    const players = allPlayers;
+    const counts = players.map(p=>scopeData.filter(r=>getVal(r,'Player')===p).length);
+    const total = counts.reduce((a,b)=>a+b,0)||1;
+    const sovVals = counts.map(c=>+(c/total*100).toFixed(1));
+    const maxP = players[sovVals.indexOf(Math.max(...sovVals))];
+    return {
+      text:`📊 <strong>Share of Voice${periodLabel?` — ${periodLabel}`:''}</strong><br><span style="font-size:12px;color:var(--text3)">(${scopeData.length} notícias no período)</span><br><br>${players.map((p,i)=>`• <strong>${p}</strong>: <span style="color:var(--accent2)">${sovVals[i]}%</span> (${counts[i]} notícias)`).join('<br>')}<br><br>🏆 Líder: <strong>${maxP}</strong> com ${sovVals[players.indexOf(maxP)]}% do espaço midiático`,
+      analysis:`${maxP} domina o Share of Voice com ${sovVals[players.indexOf(maxP)]}% das menções no período analisado${periodLabel?' ('+periodLabel+')':''}. Diferença para o 2º colocado: ${(sovVals.sort((a,b)=>b-a)[0]-sovVals.sort((a,b)=>b-a)[1]).toFixed(1)} pontos percentuais.`,
+      insights:[`Analise os tipos de pauta que elevaram o SOV de ${maxP} e replique a estratégia nos demais players`,`Se o SOV elevado de um player vier acompanhado de sentimento negativo, pode indicar crise — cruze os dados`,`Defina meta de SOV por player e monitore a evolução mensal para detectar perdas de espaço midiático`],
+      chartData: doughnutChart(players, counts)
+    };
+  }
+
+  // ── COMPARATIVO ENTRE DOIS PLAYERS ──────────────────────────────────────
+  if(/compar|versus|vs\.?|entre .+ e |diferenca|diferença/.test(q)){
+    const mentioned = allPlayers.filter(p=>q.includes(p.toLowerCase()));
+    const compPlayers = mentioned.length >= 2 ? mentioned.slice(0,2) : allPlayers.slice(0,2);
+    const [p1,p2] = compPlayers;
+    const scopeData = filterByPeriod(d, q);
+
+    const stat = (p)=>{
+      const pd = scopeData.filter(r=>getVal(r,'Player')===p);
+      const pos = pd.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length;
+      const neg = pd.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('neg')).length;
+      const prot = pd.filter(r=>(getVal(r,'Protagonismo')||'').toLowerCase().includes('sim')).length;
+      const rps = pd.map(r=>getNumVal(r,'RPS')).reduce((a,b)=>a+b,0);
+      const ave = pd.map(r=>getNumVal(r,'EquivalenciaPublicitaria')||getNumVal(r,'AVE')).reduce((a,b)=>a+b,0);
+      const sov = scopeData.length?+(pd.length/scopeData.length*100).toFixed(1):0;
+      return {n:pd.length,pos,neg,prot,rps:+rps.toFixed(0),ave:+ave.toFixed(0),sov};
+    };
+    const s1=stat(p1), s2=stat(p2);
+    const metrics=['Notícias','Positivas','Negativas','Protagonismo','RPS Alcançado','SOV %'];
+    const vals1=[s1.n,s1.pos,s1.neg,s1.prot,s1.rps,s1.sov];
+    const vals2=[s2.n,s2.pos,s2.neg,s2.prot,s2.rps,s2.sov];
+    const periodLabel = getPeriodLabel(q);
+    return {
+      text:`⚔️ <strong>${p1} vs ${p2}${periodLabel?` — ${periodLabel}`:''}</strong><br><br>${metrics.map((m,i)=>`• ${m}: <strong>${p1}</strong> ${vals1[i]} × <strong>${p2}</strong> ${vals2[i]} ${vals1[i]>vals2[i]?'<span style="color:#68d391">↑ '+p1+'</span>':vals1[i]<vals2[i]?'<span style="color:#fc8181">↑ '+p2+'</span>':'<span style="color:#8892ab">= empate</span>'}`).join('<br>')}<br><br>AVE: <strong>${p1}</strong> ${formatBRL(s1.ave)} × <strong>${p2}</strong> ${formatBRL(s2.ave)}`,
+      analysis:`${s1.pos>s2.pos?p1:p2} lidera em cobertura positiva. ${s1.prot>s2.prot?p1:p2} tem maior protagonismo (${Math.max(s1.prot,s2.prot)} notícias). ${s1.rps>s2.rps?p1:p2} acumula maior RPS (${Math.max(s1.rps,s2.rps)} pontos).`,
+      insights:[`${s1.neg>s2.neg?p1:p2} tem mais cobertura negativa — priorizar plano de pauta positiva para reduzir este gap`,`Analise os veículos e temas onde ${s1.sov<s2.sov?p1:p2} perde espaço para identificar oportunidades`,`Compartilhe o comparativo com a liderança mensalmente para justificar investimentos estratégicos de comunicação`],
+      chartData:{type:'bar',data:{labels:metrics,datasets:[
+        {label:p1,data:vals1,backgroundColor:'rgba(99,179,237,.75)',borderRadius:4},
+        {label:p2,data:vals2,backgroundColor:'rgba(246,173,85,.75)',borderRadius:4}
+      ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}
+    }};
+  }
+
+  // ── TEMAS NEGATIVOS / POSITIVOS ───────────────────────────────────────────
+  if(/tema.*(negativ|positiv)|negativ.*tema|positiv.*tema|assunto.*(negativ|positiv)|pauta.*(negativ|positiv)/.test(q)){
+    const isNeg = /negativ/.test(q);
+    const scopeData = filterByPeriod(mentionedPlayer ? d.filter(r=>getVal(r,'Player')===mentionedPlayer) : d, q);
+    const filtered = scopeData.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes(isNeg?'neg':'pos'));
+    const temaCount={};
+    filtered.forEach(r=>{const t=getVal(r,'Temas')||getVal(r,'Tema');if(t)temaCount[t]=(temaCount[t]||0)+1;});
+    const sorted=Object.entries(temaCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    const periodLabel = getPeriodLabel(q);
+    return {
+      text:`${isNeg?'🔴':'🟢'} <strong>Temas ${isNeg?'Negativos':'Positivos'}${mentionedPlayer?' do '+mentionedPlayer:''}${periodLabel?' — '+periodLabel:''}</strong><br><br>${sorted.map(([t,n],i)=>`${i+1}. <strong>${t}</strong>: ${n} notícias`).join('<br>')||'Nenhum tema encontrado com este filtro.'}`,
+      analysis:`${sorted[0]?`"${sorted[0][0]}" é o tema com maior cobertura ${isNeg?'negativa':'positiva'}${mentionedPlayer?' para '+mentionedPlayer:''}. `:''}${isNeg?'Temas negativos exigem argumentários de resposta e pautas positivas compensatórias.':'Temas positivos indicam áreas de força da comunicação que podem ser amplificadas.'}`,
+      insights:[
+        isNeg?`Desenvolva porta-vozes especializados em "${sorted[0]?.[0]||'ESG'}" para reverter a narrativa negativa`:`Amplifique a cobertura positiva sobre "${sorted[0]?.[0]||'inovação'}" com conteúdo proprietário`,
+        `Prepare release proativo sobre os ${isNeg?'3 temas mais negativos':'2 temas positivos mais fracos'} para reverter/reforçar a percepção`,
+        `Monitore esses temas semanalmente para antecipar tendências e reagir antes que se tornem crises`
+      ],
+      chartData: hBar(sorted.map(x=>x[0].substring(0,22)), sorted.map(x=>x[1]), `Notícias ${isNeg?'Negativas':'Positivas'}`, isNeg?'rgba(252,129,129,.75)':'rgba(104,211,145,.75)')
+    };
+  }
+
+  // ── PORTA-VOZES EM MATÉRIAS POSITIVAS/NEGATIVAS ───────────────────────────
+  if(/porta.?voz.*(positiv|negativ)|executiv.*(positiv|negativ)|(positiv|negativ).*porta.?voz/.test(q)){
+    const isPos = /positiv/.test(q);
+    const scopeData = (mentionedPlayer ? d.filter(r=>getVal(r,'Player')===mentionedPlayer) : d)
+      .filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes(isPos?'pos':'neg'));
+    const pvCount={};
+    scopeData.forEach(r=>{const pv=getVal(r,'Porta_Voz')||getVal(r,'PortaVoz')||getVal(r,'Porta-Voz');if(pv&&pv.length>1&&!pv.toLowerCase().includes('não')&&!pv.toLowerCase().includes('nao'))pvCount[pv]=(pvCount[pv]||0)+1;});
+    const sorted=Object.entries(pvCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    if(!sorted.length) return{text:`Não foram encontrados porta-vozes em matérias ${isPos?'positivas':'negativas'}${mentionedPlayer?' do '+mentionedPlayer:''}. Verifique se o campo Porta_Voz está preenchido.`,analysis:'',insights:['Preencha o campo Porta_Voz no clipping para habilitar esta análise','Implemente processo de registro de porta-vozes em todas as notícias monitoradas'],chartData:null};
+    return {
+      text:`🎙️ <strong>Porta-vozes em matérias ${isPos?'positivas':'negativas'}${mentionedPlayer?' — '+mentionedPlayer:''}</strong><br><br>${sorted.map(([pv,n],i)=>`${i+1}. <strong>${pv}</strong>: ${n} menções`).join('<br>')}`,
+      analysis:`${sorted[0][0]} é o porta-voz mais associado a cobertura ${isPos?'positiva':'negativa'}${mentionedPlayer?' do '+mentionedPlayer:''}. ${isPos?'Este executivo demonstra habilidade de gerar pautas favoráveis.':'Pode indicar necessidade de treinamento ou que este executivo atua mais em situações de crise.'}`,
+      insights:[
+        isPos?`${sorted[0][0]} deve ser o porta-voz preferencial em pautas estratégicas — use seu perfil em eventos e entrevistas exclusivas`:`Providencie media training específico para ${sorted[0][0]} focado em gestão de narrativa negativa`,
+        `Desenvolva um mapa de porta-vozes por tema — cada executivo deve ter expertise reconhecida nos seus temas de atuação`,
+        `Crie um score de performance de porta-vozes (notícias positivas / total de aparições) e revise trimestralmente`
+      ],
+      chartData: singleBar(sorted.map(x=>x[0].split(' ').slice(0,2).join(' ')), sorted.map(x=>x[1]), 'Menções', isPos?'rgba(104,211,145,.75)':'rgba(252,129,129,.75)')
+    };
+  }
+
+  // ── VEÍCULO COM MAIS DESTAQUE / MANCHETE / PRINCIPAL ─────────────────────
+  if(/manchete|destaque|principal|espaco|espaço|mais espaco|veiculo.*destaque|destaque.*veiculo/.test(q)){
+    const scopeData = mentionedPlayer ? d.filter(r=>getVal(r,'Player')===mentionedPlayer) : d;
+    // "Destaque" = Espaço=Principal OU Protagonismo=SIM
+    const highlight = scopeData.filter(r=>{
+      const esp=(getVal(r,'Espaco')||getVal(r,'Espaço')||'').toLowerCase();
+      const prot=(getVal(r,'Protagonismo')||'').toLowerCase();
+      return esp.includes('principal')||esp.includes('destaque')||prot.includes('sim');
+    });
+    const veicCount={};
+    highlight.forEach(r=>{const v=getVal(r,'Veiculo');if(v)veicCount[v]=(veicCount[v]||0)+1;});
+    const sorted=Object.entries(veicCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    return {
+      text:`🔦 <strong>Veículos com mais destaque${mentionedPlayer?' para '+mentionedPlayer:''}</strong><br><span style="font-size:12px;color:var(--text3)">(Espaço=Principal ou Protagonismo=Sim)</span><br><br>${sorted.map(([v,n],i)=>`${i+1}. <strong>${v}</strong>: ${n} notícias em destaque`).join('<br>')||'Nenhum dado encontrado. Verifique se os campos Espaço e Protagonismo estão preenchidos.'}`,
+      analysis:`${sorted[0]?`${sorted[0][0]} é o veículo que mais deu destaque${mentionedPlayer?' ao '+mentionedPlayer:''}. Presença em posição de destaque tem peso maior no RPS e impacto de imagem.`:'Verifique o preenchimento dos campos Espaço e Protagonismo.'}`,
+      insights:[`Priorize o relacionamento com a equipe editorial de ${sorted[0]?.[0]||'veículos Tier 1'} — é o veículo que mais dá protagonismo`,`Notícias em destaque devem ser amplificadas nas redes sociais corporativas para maximizar o alcance`,`Identifique os repórteres responsáveis pelas matérias de destaque e cultive esse relacionamento`],
+      chartData: sorted.length ? singleBar(sorted.map(x=>x[0].substring(0,14)), sorted.map(x=>x[1]), 'Notícias em Destaque', 'rgba(183,148,244,.75)') : null
+    };
+  }
+
+  // ── BUSCA POR TEMA / TERMO ESPECÍFICO ─────────────────────────────────────
+  if(/esg|sustentabilidade|inovacao|inovação|credito|crédito|pix|open.?finance|inflacao|inflação|fraude|crise|resultado|lucro|dividendo|expansao|expansão/.test(q)||/noticias (sobre|de|com) .+/.test(q)||/materia.* (sobre|de) .+/.test(q)){
+    const keywords = extractKeywords(q);
+    const scopeData = filterByPeriod(mentionedPlayer ? d.filter(r=>getVal(r,'Player')===mentionedPlayer) : d, q);
+    const matched = scopeData.filter(r=>{
+      const tema=(getVal(r,'Temas')||getVal(r,'Tema')||'').toLowerCase();
+      const titulo=(getVal(r,'Titulo')||getVal(r,'Título')||'').toLowerCase();
+      const conteudo=(getVal(r,'Conteudo')||getVal(r,'Conteúdo')||'').toLowerCase().substring(0,200);
+      return keywords.some(kw=>tema.includes(kw)||titulo.includes(kw)||conteudo.includes(kw));
+    });
+    const periodLabel = getPeriodLabel(q);
+    const sentPos=matched.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length;
+    const sentNeg=matched.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('neg')).length;
+    const players=getUniqueValues('Player');
+    const playerCounts=players.map(p=>matched.filter(r=>getVal(r,'Player')===p).length);
+    // Evolução mensal
+    const monthlyM={};
+    matched.forEach(r=>{const dt=parseDate(r);if(!dt)return;const k=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;monthlyM[k]=(monthlyM[k]||0)+1;});
+    const sortedM=Object.keys(monthlyM).sort();
+    return {
+      text:`🔍 <strong>Notícias sobre "${keywords[0]}"${mentionedPlayer?' — '+mentionedPlayer:''}${periodLabel?' — '+periodLabel:''}</strong><br><br>Total encontrado: <strong>${matched.length}</strong> notícias<br>• <span style="color:#68d391">Positivas: ${sentPos}</span> · <span style="color:#fc8181">Negativas: ${sentNeg}</span> · Neutras: ${matched.length-sentPos-sentNeg}<br><br><strong>Por player:</strong><br>${players.filter((_,i)=>playerCounts[i]>0).map((p,i)=>`• ${p}: ${playerCounts[players.indexOf(p)]} notícias`).join('<br>')||'N/A'}<br><br><strong>Por mês:</strong><br>${sortedM.map(k=>`• ${k}: ${monthlyM[k]}`).join('<br>')||'Sem dados temporais'}`,
+      analysis:`O tema "${keywords[0]}" gerou ${matched.length} notícias no período. ${sentNeg>sentPos?'A cobertura negativa predomina — plano de contra-narrativa é urgente.':'A cobertura é majoritariamente positiva, indicando boa gestão deste tema.'}`,
+      insights:[`${sentNeg>sentPos?`Crie um argumentário específico sobre "${keywords[0]}" e distribua para todos os porta-vozes`:`Capitalize a cobertura positiva sobre "${keywords[0]}" em materiais institucionais e redes sociais`}`,`Monitore o volume mensal sobre este tema — crescimento acima de 20% pode sinalizar crise emergente`,`Identifique os veículos que mais cobriram "${keywords[0]}" e garanta presença proativa nas próximas coberturas`],
+      chartData: sortedM.length > 1 ? lineChart(sortedM, sortedM.map(k=>monthlyM[k]), `Notícias sobre "${keywords[0]}"`) : singleBar(players.filter((_,i)=>playerCounts[i]>0), playerCounts.filter(v=>v>0), 'Notícias')
+    };
+  }
+
+  // ── DIA DA SEMANA (melhor dia para releases) ──────────────────────────────
+  if(/dia.*(semana|melhor|otimo|ótimo|ideal|release|envio|publicac)|release.*(dia|melhor|quando)|horario|horário/.test(q)){
+    const dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+    const diasCount=[0,0,0,0,0,0,0];
+    const diasPos=[0,0,0,0,0,0,0];
+    d.forEach(r=>{
+      const dt=parseDate(r);if(!dt)return;
+      const dw=dt.getDay();
+      diasCount[dw]++;
+      if((getVal(r,'Sentimento')||'').toLowerCase().includes('pos'))diasPos[dw]++;
+    });
+    const uteis=dias.slice(1,6);
+    const ateisCount=diasCount.slice(1,6);
+    const ateisPos=diasPos.slice(1,6);
+    const melhorDia=uteis[ateisCount.indexOf(Math.max(...ateisCount))];
+    const melhorDiaPos=uteis[ateisPos.indexOf(Math.max(...ateisPos))];
+    return {
+      text:`📅 <strong>Análise por dia da semana</strong><br><br>${dias.map((d,i)=>`• <strong>${d}</strong>: ${diasCount[i]} notícias (${diasPos[i]} positivas)`).join('<br>')}<br><br>📈 Dia com mais publicações: <strong>${melhorDia}</strong><br>😊 Dia com mais cobertura positiva: <strong>${melhorDiaPos}</strong>`,
+      analysis:`${melhorDia} é o dia com maior volume de publicações. Para maximizar visibilidade, releases enviados na tarde de ${uteis[(uteis.indexOf(melhorDia)-1+5)%5]||'quinta-feira'} têm maior chance de publicação em ${melhorDia}.`,
+      insights:[`Programe envio de releases para ${uteis[(uteis.indexOf(melhorDia)-1+5)%5]||'quinta-feira'} à tarde para publicação no dia mais ativo`,`Evite envio de comunicados críticos na ${dias[1]} — dia de menor volume e mais concorrido para atenção editorial`,`Crie um calendário editorial semanal com pautas temáticas alinhadas ao ritmo natural dos veículos`],
+      chartData:{type:'bar',data:{labels:uteis,datasets:[{label:'Total',data:ateisCount,backgroundColor:'rgba(99,179,237,.6)',borderRadius:4},{label:'Positivas',data:ateisPos,backgroundColor:'rgba(104,211,145,.75)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}}
+    };
+  }
+
+  // ── VEÍCULOS PREMIUM / TIER 1 POR PLAYER ────────────────────────────────
+  if(/premium|tier.?1|veiculo.*(melhor|top|principal|alta)|alta relevancia|alta relevância/.test(q)){
+    const players=allPlayers;
+    const tier1Vals=players.map(p=>{
+      return d.filter(r=>{
+        const player=getVal(r,'Player')===p;
+        const t=(getVal(r,'ClassificacaoVeiculo')||getVal(r,'Relevancia')||getVal(r,'Relevância')||'').toLowerCase();
+        return player&&(t.includes('1')||t.includes('alta'));
+      }).length;
+    });
+    const pct=players.map((p,i)=>{
+      const total=d.filter(r=>getVal(r,'Player')===p).length||1;
+      return +(tier1Vals[i]/total*100).toFixed(1);
+    });
+    const maxP=players[tier1Vals.indexOf(Math.max(...tier1Vals))];
+    return {
+      text:`🏅 <strong>Presença em veículos Tier 1 / Premium por player</strong><br><br>${players.map((p,i)=>`• <strong>${p}</strong>: ${tier1Vals[i]} notícias Tier 1 (${pct[i]}% do total)`).join('<br>')}<br><br>🏆 Maior presença Tier 1: <strong>${maxP}</strong>`,
+      analysis:`${maxP} concentra a maior presença em veículos de alta relevância. Notícias em Tier 1 têm maior impacto no RPS, no AVE e na formação de opinião de stakeholders estratégicos.`,
+      insights:[`Players com menor % Tier 1 devem ter estratégia específica de pitch para veículos premium do setor financeiro`,`Desenvolva exclusivos ou dados inéditos para oferecer aos veículos Tier 1 — jornalistas desses veículos valorizam informações proprietárias`,`Acompanhe a evolução mensal de Tier 1 por player — queda neste indicador sinaliza perda de relevância perante a mídia estratégica`],
+      chartData: hBar(players, tier1Vals, 'Notícias Tier 1', 'rgba(246,173,85,.8)')
+    };
+  }
+
+  // ── EVOLUÇÃO DE SENTIMENTO POR PLAYER/TEMA ────────────────────────────────
+  if(/evoluc|evolução|historico|histórico|ao longo|mensal|trimestral|tendencia|tendência/.test(q)&&/sentimento|positiv|negativ/.test(q)){
+    const scopeData = mentionedPlayer ? d.filter(r=>getVal(r,'Player')===mentionedPlayer) : d;
+    const keywords = extractKeywords(q);
+    const filtered = keywords.length ? scopeData.filter(r=>{
+      const tema=(getVal(r,'Temas')||'').toLowerCase();
+      const titulo=(getVal(r,'Titulo')||'').toLowerCase();
+      return keywords.some(kw=>tema.includes(kw)||titulo.includes(kw));
+    }) : scopeData;
+    const monthlyPos={},monthlyNeg={};
+    filtered.forEach(r=>{
+      const dt=parseDate(r);if(!dt)return;
+      const k=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+      if((getVal(r,'Sentimento')||'').toLowerCase().includes('pos'))monthlyPos[k]=(monthlyPos[k]||0)+1;
+      if((getVal(r,'Sentimento')||'').toLowerCase().includes('neg'))monthlyNeg[k]=(monthlyNeg[k]||0)+1;
+    });
+    const months=Object.keys({...monthlyPos,...monthlyNeg}).sort();
+    return {
+      text:`📉📈 <strong>Evolução de Sentimento${mentionedPlayer?' — '+mentionedPlayer:''}${keywords.length?' sobre '+keywords[0]:''}</strong><br><br>${months.map(k=>`• <strong>${k}</strong>: <span style="color:#68d391">+${monthlyPos[k]||0}</span> / <span style="color:#fc8181">-${monthlyNeg[k]||0}</span>`).join('<br>')}`,
+      analysis:`A evolução do sentimento${mentionedPlayer?' do '+mentionedPlayer:''} ao longo dos meses revela tendências importantes. ${months.length>1?`O mês de ${months[months.length-1]} registrou ${monthlyPos[months[months.length-1]]||0} positivas e ${monthlyNeg[months[months.length-1]]||0} negativas.`:''}`,
+      insights:[`Identifique eventos externos correlacionados com picos de negatividade para antecipar situações similares`,`Meses com queda de sentimento positivo exigem ação proativa — planeje pautas favoráveis para os períodos historicamente mais negativos`,`Crie um alerta automático: se negativos superarem positivos em qualquer mês, acionar plano de comunicação de crise`],
+      chartData:{type:'line',data:{labels:months,datasets:[{label:'Positivas',data:months.map(k=>monthlyPos[k]||0),borderColor:'#68d391',backgroundColor:'rgba(104,211,145,.08)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#68d391'},{label:'Negativas',data:months.map(k=>monthlyNeg[k]||0),borderColor:'#fc8181',backgroundColor:'rgba(252,129,129,.08)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#fc8181'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}
+    }};
+  }
+
   // ── DEFAULT / AJUDA ──────────────────────────────────────────────────────
   const rpsAlc2=allPlayers.map(p=>d.filter(r=>getVal(r,'Player')===p).map(r=>getNumVal(r,'RPS')).reduce((a,b)=>a+b,0));
   return {
-    text:`🔍 Encontrei <strong>${d.length} notícias</strong> sobre ${allPlayers.length} players: <strong>${allPlayers.join(', ')}</strong>.<br><br>Posso responder perguntas sobre:<br>• 😊 <em>"Qual o sentimento do Bradesco?"</em><br>• 📈 <em>"Compare o RPS por player"</em><br>• 💰 <em>"Qual o AVE total?"</em><br>• 🎯 <em>"Como está o protagonismo?"</em><br>• 📅 <em>"Mostre a evolução temporal"</em><br>• 📰 <em>"Quais os top veículos?"</em><br>• 🏷️ <em>"Quais os temas mais abordados?"</em><br>• 🎙️ <em>"Quem são os porta-vozes?"</em><br>• 🧭 <em>"Qual a motivação das notícias?"</em><br>• 🏅 <em>"Distribuição por Tier?"</em><br>• 📋 <em>"Dê um resumo geral"</em>`,
-    analysis:`A análise local processa todos os ${d.length} registros diretamente no navegador, sem necessidade de API. Para perguntas livres mais complexas, configure uma API Key em 🔑 Configurações.`,
-    insights:[
-      `Experimente: "Como está o sentimento do Santander?"`,
-      `Experimente: "Quais os veículos com mais publicações?"`,
-      `Experimente: "Dê um resumo geral da cobertura"`
-    ],
+    text:`🔍 Encontrei <strong>${d.length} notícias</strong> sobre ${allPlayers.length} players: <strong>${allPlayers.join(', ')}</strong>.<br><br><strong>Perguntas que posso responder:</strong><br>• 📊 <em>"Qual o share of voice do Santander?"</em><br>• ⚔️ <em>"Compare Santander e Bradesco"</em><br>• 😊 <em>"Qual o sentimento do Bradesco?"</em><br>• 🔴 <em>"Quais os temas negativos do Itaú?"</em><br>• 🎙️ <em>"Porta-vozes em matérias positivas"</em><br>• 🔦 <em>"Qual veículo deu mais destaque ao Santander?"</em><br>• 🔍 <em>"Notícias sobre ESG do último trimestre"</em><br>• 📅 <em>"Qual o melhor dia para enviar releases?"</em><br>• 🏅 <em>"Quais players têm mais presença Tier 1?"</em><br>• 📉 <em>"Evolução de sentimento do Bradesco"</em><br>• 📈 <em>"RPS por player"</em> · 💰 <em>"AVE total"</em> · 🎯 <em>"Protagonismo"</em>`,
+    analysis:`Análise local ativa com ${d.length} notícias. Para perguntas em linguagem totalmente livre, configure uma API Key de LLM em 🔑 Configurações.`,
+    insights:[`Experimente: "Qual o share of voice do Santander no último mês?"`,`Experimente: "Compare o sentimento entre Santander e Bradesco"`,`Experimente: "Quais os temas negativos do Itaú?"`],
     chartData: hBar(allPlayers, rpsAlc2.map(v=>+v.toFixed(0)), 'RPS Alcançado', 'rgba(246,173,85,.75)')
   };
 }
