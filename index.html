@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
+  /* ── DARK THEME (default) ── */
   :root {
     --bg: #07080f;
     --bg2: #0d0f1a;
@@ -26,7 +27,191 @@
     --text2: #8892ab;
     --text3: #4a5270;
     --glow: rgba(99,179,237,0.15);
+    --grid-line: rgba(99,179,237,0.025);
+    --shadow: 0 4px 24px rgba(0,0,0,.4);
+    --topbar-bg: rgba(7,8,15,0.85);
+    --chart-tick: #4a5270;
+    --chart-grid: rgba(255,255,255,0.04);
+    --toggle-bg: #1a1e35;
+    --toggle-knob: #63b3ed;
+    --toggle-icon-show: '☀️';
+    --toggle-icon-hide: '🌙';
   }
+
+  /* ── LIGHT THEME ── */
+  :root[data-theme="light"] {
+    --bg: #f0f4fa;
+    --bg2: #ffffff;
+    --bg3: #f5f7fc;
+    --bg4: #e8edf7;
+    --border: rgba(0,0,0,0.08);
+    --border-active: rgba(37,99,235,0.35);
+    --accent: #2563eb;
+    --accent2: #d97706;
+    --accent3: #16a34a;
+    --accent-neg: #dc2626;
+    --text: #0f172a;
+    --text2: #475569;
+    --text3: #94a3b8;
+    --glow: rgba(37,99,235,0.08);
+    --grid-line: rgba(37,99,235,0.04);
+    --shadow: 0 4px 24px rgba(0,0,0,.1);
+    --topbar-bg: rgba(240,244,250,0.9);
+    --chart-tick: #94a3b8;
+    --chart-grid: rgba(0,0,0,0.05);
+    --toggle-bg: #e8edf7;
+    --toggle-knob: #2563eb;
+  }
+
+  /* ── THEME TOGGLE BUTTON ── */
+  .theme-toggle {
+    width: 52px; height: 28px;
+    border-radius: 14px;
+    background: var(--toggle-bg);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    position: relative;
+    transition: background .3s, border-color .3s;
+    flex-shrink: 0;
+    display: flex; align-items: center;
+    padding: 0 4px;
+  }
+  .theme-toggle::before {
+    content: '';
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--toggle-knob);
+    position: absolute; left: 4px;
+    transition: transform .3s, background .3s;
+    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  }
+  :root[data-theme="light"] .theme-toggle::before {
+    transform: translateX(24px);
+  }
+  .theme-toggle-wrap {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 13px; color: var(--text2);
+  }
+  .theme-icon { font-size: 14px; line-height: 1; }
+
+  /* ── GLOBAL TRANSITIONS ── */
+  .sidebar, .sidebar-logo, .main, .topbar, .page,
+  .stat-card, .chart-card, .upload-zone, .input-field,
+  .chat-input-area, .msg-bubble, .msg-chart, .msg-analysis,
+  .panel-card, .data-table th, .data-table td,
+  .modal-overlay, .modal, .btn, .dropdown-menu,
+  .dropdown-item, .hero-area, .quick-q, .filter-pill,
+  .sidebar-nav-item, .status-badge, .chat-right, .toast {
+    transition: background .25s, border-color .25s, color .25s, box-shadow .25s;
+  }
+
+  /* ── LIGHT MODE OVERRIDES ── */
+  /* sidebar logo glow */
+  :root[data-theme="light"] .sidebar {
+    box-shadow: 2px 0 16px rgba(0,0,0,0.06);
+  }
+  /* hero gradient text */
+  :root[data-theme="light"] .hero-h1 em {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  /* user bubble light */
+  :root[data-theme="light"] .msg-user .msg-bubble {
+    background: #2563eb;
+    color: #fff;
+  }
+  /* AI bubble light */
+  :root[data-theme="light"] .msg-ai .msg-bubble {
+    background: #ffffff;
+    border-color: rgba(0,0,0,0.09);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  /* stat card glow */
+  :root[data-theme="light"] .stat-card {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  :root[data-theme="light"] .stat-card::before {
+    opacity: 0.4;
+  }
+  /* chart cards */
+  :root[data-theme="light"] .chart-card {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  }
+  /* upload zone */
+  :root[data-theme="light"] .upload-zone {
+    background: linear-gradient(135deg, rgba(37,99,235,0.03) 0%, rgba(124,58,237,0.03) 100%);
+  }
+  :root[data-theme="light"] .upload-zone:hover,
+  :root[data-theme="light"] .upload-zone.dragging {
+    background: linear-gradient(135deg, rgba(37,99,235,0.07) 0%, rgba(124,58,237,0.06) 100%);
+    border-color: var(--accent);
+  }
+  /* LLM buttons */
+  :root[data-theme="light"] .llm-btn.selected {
+    background: #eff6ff;
+    border-color: #2563eb;
+    color: #2563eb;
+  }
+  /* send button */
+  :root[data-theme="light"] .chat-send-btn:hover {
+    background: #1d4ed8;
+  }
+  /* toast */
+  :root[data-theme="light"] .toast {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  }
+  /* insight bullet */
+  :root[data-theme="light"] .insight-bullet {
+    background: rgba(37,99,235,0.1);
+  }
+  /* filter pill active */
+  :root[data-theme="light"] .filter-pill:hover,
+  :root[data-theme="light"] .filter-pill.active {
+    background: rgba(37,99,235,0.07);
+    border-color: #2563eb;
+    color: #2563eb;
+  }
+  /* tag light overrides */
+  :root[data-theme="light"] .tag-pos { background: rgba(22,163,74,.1); color: #16a34a; }
+  :root[data-theme="light"] .tag-neg { background: rgba(220,38,38,.1); color: #dc2626; }
+  :root[data-theme="light"] .tag-neu { background: rgba(37,99,235,.08); color: #2563eb; }
+  /* sidebar active item */
+  :root[data-theme="light"] .sidebar-nav-item.active {
+    background: #eff6ff;
+    color: #2563eb;
+  }
+  /* modal */
+  :root[data-theme="light"] .modal-overlay {
+    background: rgba(15,23,42,0.5);
+  }
+  :root[data-theme="light"] .modal {
+    box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  }
+  /* dropdown */
+  :root[data-theme="light"] .dropdown-menu {
+    box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  }
+  /* data table row hover */
+  :root[data-theme="light"] .data-table tr:hover td {
+    background: #eff6ff;
+    color: #0f172a;
+  }
+  /* analysis block */
+  :root[data-theme="light"] .msg-analysis {
+    background: rgba(217,119,6,0.06);
+    border-left-color: var(--accent2);
+  }
+  /* quick-q hover */
+  :root[data-theme="light"] .quick-q:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+    background: #eff6ff;
+  }
+  /* grok dropdown option visible in light */
+  :root[data-theme="light"] .dropdown-item { color: var(--text); }
+  :root[data-theme="light"] .dropdown-item:hover { background: var(--bg3); }
   *{margin:0;padding:0;box-sizing:border-box;}
   html{scroll-behavior:smooth;}
   body{
@@ -36,16 +221,18 @@
     font-weight:300;
     min-height:100vh;
     overflow-x:hidden;
+    transition: background .3s, color .3s;
   }
   /* GRID BACKGROUND */
   body::before{
     content:'';
     position:fixed;top:0;left:0;right:0;bottom:0;
     background-image:
-      linear-gradient(rgba(99,179,237,0.025) 1px,transparent 1px),
-      linear-gradient(90deg,rgba(99,179,237,0.025) 1px,transparent 1px);
+      linear-gradient(var(--grid-line) 1px,transparent 1px),
+      linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);
     background-size:48px 48px;
     pointer-events:none;z-index:0;
+    transition: opacity .3s;
   }
   /* SIDEBAR */
   .sidebar{
@@ -111,9 +298,10 @@
   /* TOPBAR */
   .topbar{
     height:64px;border-bottom:1px solid var(--border);
-    background:rgba(7,8,15,0.8);backdrop-filter:blur(12px);
+    background:var(--topbar-bg);backdrop-filter:blur(12px);
     display:flex;align-items:center;justify-content:space-between;
     padding:0 32px;position:sticky;top:0;z-index:50;
+    transition:background .3s,border-color .3s;
   }
   .topbar-left{
     display:flex;align-items:center;gap:12px;
@@ -135,9 +323,9 @@
     cursor:pointer;border:none;transition:all .2s;
   }
   .btn-primary{
-    background:var(--accent);color:#07080f;
+    background:var(--accent);color:#fff;
   }
-  .btn-primary:hover{background:#90cdf4;transform:translateY(-1px);}
+  .btn-primary:hover{opacity:.9;transform:translateY(-1px);}
   .btn-secondary{
     background:var(--bg3);color:var(--text2);border:1px solid var(--border);
   }
@@ -304,7 +492,7 @@
     font-size:14px;line-height:1.6;
   }
   .msg-user .msg-bubble{
-    background:var(--accent);color:#07080f;
+    background:var(--accent);color:#fff;
     border-radius:12px 12px 2px 12px;
   }
   .msg-ai .msg-bubble{
@@ -638,6 +826,11 @@
       <span class="topbar-breadcrumb" id="pageBreadcrumb">↗ Upload da planilha Excel</span>
     </div>
     <div class="topbar-right">
+      <div class="theme-toggle-wrap">
+        <span class="theme-icon" id="themeIconMoon">🌙</span>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Alternar tema claro/escuro"></button>
+        <span class="theme-icon" id="themeIconSun">☀️</span>
+      </div>
       <button class="btn btn-secondary" onclick="openApiModal()">🔑 API Keys</button>
       <div id="envBadge" style="display:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:500;letter-spacing:.05em;"></div>
       <div class="dropdown" id="llmDropdown">
@@ -1094,13 +1287,29 @@ function renderDashboard(){
   });
 }
 
-const CHART_DEFAULTS = {
-  plugins:{legend:{labels:{color:'#8892ab',font:{family:'DM Sans',size:12}}}},
-  scales:{
-    x:{ticks:{color:'#4a5270',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'rgba(255,255,255,0.06)'}},
-    y:{ticks:{color:'#4a5270',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'rgba(255,255,255,0.06)'}}
-  }
-};
+// ─── CHART THEME HELPERS ─────────────────────────────────────────────────────
+function getChartColors(){
+  const style = getComputedStyle(document.documentElement);
+  return {
+    tick:   style.getPropertyValue('--chart-tick').trim()   || '#4a5270',
+    grid:   style.getPropertyValue('--chart-grid').trim()   || 'rgba(255,255,255,0.04)',
+    legend: style.getPropertyValue('--text2').trim()        || '#8892ab',
+  };
+}
+
+function getChartDefaults(){
+  const c = getChartColors();
+  return {
+    plugins:{ legend:{ labels:{ color:c.legend, font:{family:'DM Sans',size:12} } } },
+    scales:{
+      x:{ ticks:{color:c.tick,font:{size:11}}, grid:{color:c.grid}, border:{color:c.grid} },
+      y:{ ticks:{color:c.tick,font:{size:11}}, grid:{color:c.grid}, border:{color:c.grid} }
+    }
+  };
+}
+
+// Alias for backward compat (used inline in chart options)
+let CHART_DEFAULTS = getChartDefaults();
 
 function buildSentimentoChart(data){
   const players = getUniqueValues('Player').slice(0,7);
@@ -1113,7 +1322,7 @@ function buildSentimentoChart(data){
       {label:'Positivo',data:pos,backgroundColor:'rgba(104,211,145,.7)',borderRadius:4},
       {label:'Negativo',data:neg,backgroundColor:'rgba(252,129,129,.7)',borderRadius:4}
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{...CHART_DEFAULTS.plugins,title:{display:false}},scales:CHART_DEFAULTS.scales}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{...getChartDefaults().plugins,title:{display:false}},scales:getChartDefaults().scales}
   });
 }
 
@@ -1124,7 +1333,7 @@ function buildMidiaChart(data){
   state.charts['midia']=new Chart(document.getElementById('c-midia'),{
     type:'doughnut',
     data:{labels,datasets:[{data:vals,backgroundColor:['#63b3ed','#f6ad55','#68d391','#fc8181','#b794f4'],borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{...CHART_DEFAULTS.plugins}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{...getChartDefaults().plugins}}
   });
 }
 
@@ -1138,7 +1347,7 @@ function buildRPSChart(data){
   state.charts['rps']=new Chart(document.getElementById('c-rps'),{
     type:'bar',
     data:{labels:players,datasets:[{label:'RPS Alcançado',data:rpsAlcancado,backgroundColor:'rgba(99,179,237,.7)',borderRadius:4}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{...CHART_DEFAULTS.plugins},scales:CHART_DEFAULTS.scales}
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{...getChartDefaults().plugins},scales:getChartDefaults().scales}
   });
 }
 
@@ -1160,7 +1369,7 @@ function buildTemporalChart(data){
   state.charts['temporal']=new Chart(document.getElementById('c-temporal'),{
     type:'line',
     data:{labels:sorted,datasets:[{label:'Notícias',data:sorted.map(k=>monthly[k]),borderColor:'#63b3ed',backgroundColor:'rgba(99,179,237,.08)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#63b3ed'}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{...CHART_DEFAULTS.plugins},scales:CHART_DEFAULTS.scales}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{...getChartDefaults().plugins},scales:getChartDefaults().scales}
   });
 }
 
@@ -1170,7 +1379,7 @@ function buildProtagonismoChart(data){
   state.charts['prot']=new Chart(document.getElementById('c-protagonismo'),{
     type:'pie',
     data:{labels:['Protagonista','Não Protagonista'],datasets:[{data:[sim,nao],backgroundColor:['#63b3ed','#1a1e35'],borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{...CHART_DEFAULTS.plugins}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{...getChartDefaults().plugins}}
   });
 }
 
@@ -1760,11 +1969,8 @@ function buildResultFromParsed(p){
       options:{
         indexAxis: p.chartType==='horizontalBar'?'y':'x',
         responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{ labels:{ color:'#8892ab', font:{size:11} } } },
-        scales:(type==='doughnut'||type==='pie')?undefined:{
-          x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},
-          y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}
-        }
+        plugins:{ legend:chartLegend() },
+        scales:(type==='doughnut'||type==='pie')?undefined:chartScales()
       }
     };
   }
@@ -1772,15 +1978,24 @@ function buildResultFromParsed(p){
 }
 
 // ─── HELPERS ────────────────────────────────────────────────────────────────
+function chartScales(horizontal){
+  const c=getChartColors();
+  const axis={ticks:{color:c.tick,font:{size:10}},grid:{color:c.grid}};
+  return horizontal?{x:axis,y:axis}:{x:axis,y:axis};
+}
+function chartLegend(){
+  return {labels:{color:getChartColors().legend,font:{size:11}}};
+}
 function barChart(labels,datasets,horizontal=false){
-  return {type:'bar',data:{labels,datasets},options:{indexAxis:horizontal?'y':'x',responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}};
+  return {type:'bar',data:{labels,datasets},options:{indexAxis:horizontal?'y':'x',responsive:true,maintainAspectRatio:false,plugins:{legend:chartLegend()},scales:chartScales()}};
 }
 function lineChart(labels,data,label='Notícias'){
-  return {type:'line',data:{labels,datasets:[{label,data,borderColor:'#63b3ed',backgroundColor:'rgba(99,179,237,.08)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#63b3ed'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}};
+  const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#63b3ed';
+  return {type:'line',data:{labels,datasets:[{label,data,borderColor:accent,backgroundColor:accent.replace(')',', .08)').replace('rgb','rgba'),fill:true,tension:.4,pointRadius:3,pointBackgroundColor:accent}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:chartLegend()},scales:chartScales()}};
 }
 function doughnutChart(labels,data){
   const colors=['#63b3ed','#f6ad55','#68d391','#fc8181','#b794f4','#76e4f7','#fbb6ce','#c3dafe'];
-  return {type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors.slice(0,labels.length),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}}}};
+  return {type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors.slice(0,labels.length),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:chartLegend()}}};
 }
 function singleBar(labels,data,label,color='rgba(99,179,237,.75)'){
   return barChart(labels,[{label,data,backgroundColor:color,borderRadius:4}]);
@@ -1886,7 +2101,7 @@ function localAnalyze(question, summary){
         `Implemente um termômetro de sentimento semanal para detectar mudanças de percepção antes que se tornem crises`
       ],
       chartData: players.length>1
-        ? {type:'bar',data:{labels:players,datasets:[{label:'Positivo',data:posVals,backgroundColor:'rgba(104,211,145,.75)',borderRadius:4},{label:'Negativo',data:negVals,backgroundColor:'rgba(252,129,129,.75)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}} }
+        ? {type:'bar',data:{labels:players,datasets:[{label:'Positivo',data:posVals,backgroundColor:'rgba(104,211,145,.75)',borderRadius:4},{label:'Negativo',data:negVals,backgroundColor:'rgba(252,129,129,.75)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:chartLegend()},scales:chartScales()} }
         : doughnutChart(['Positivo','Negativo','Neutro'],[pos,neg,neu])
     };
   }
@@ -1959,7 +2174,7 @@ function localAnalyze(question, summary){
         `Treine porta-vozes para assumir posicionamentos claros e diferenciados que forcem os veículos a tratá-los como referência no tema`,
         `Estabeleça meta de ${Math.min(pct+15,80)}% de protagonismo para o próximo trimestre e monitore semanalmente`
       ],
-      chartData:{type:'bar',data:{labels:players,datasets:[{label:'Protagonista',data:simVals,backgroundColor:'rgba(99,179,237,.75)',borderRadius:4},{label:'Não Protagonista',data:naoVals,backgroundColor:'rgba(74,82,112,.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}} }
+      chartData:{type:'bar',data:{labels:players,datasets:[{label:'Protagonista',data:simVals,backgroundColor:'rgba(99,179,237,.75)',borderRadius:4},{label:'Não Protagonista',data:naoVals,backgroundColor:'rgba(74,82,112,.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:chartLegend()},scales:chartScales()} }
     };
   }
 
@@ -2144,7 +2359,7 @@ function localAnalyze(question, summary){
       chartData:{type:'bar',data:{labels:allPlayers,datasets:[
         {label:'Positivo',data:allPlayers.map(p=>d.filter(r=>getVal(r,'Player')===p&&(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length),backgroundColor:'rgba(104,211,145,.75)',borderRadius:4},
         {label:'Negativo',data:allPlayers.map(p=>d.filter(r=>getVal(r,'Player')===p&&(getVal(r,'Sentimento')||'').toLowerCase().includes('neg')).length),backgroundColor:'rgba(252,129,129,.75)',borderRadius:4}
-      ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}} }
+      ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:chartLegend()},scales:chartScales()} }
     };
   }
 
@@ -2195,7 +2410,7 @@ function localAnalyze(question, summary){
       chartData:{type:'bar',data:{labels:metrics,datasets:[
         {label:p1,data:vals1,backgroundColor:'rgba(99,179,237,.75)',borderRadius:4},
         {label:p2,data:vals2,backgroundColor:'rgba(246,173,85,.75)',borderRadius:4}
-      ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}
+      ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:chartLegend()},scales:chartScales()}
     }};
   }
 
@@ -2308,7 +2523,7 @@ function localAnalyze(question, summary){
       text:`📅 <strong>Análise por dia da semana</strong><br><br>${dias.map((d,i)=>`• <strong>${d}</strong>: ${diasCount[i]} notícias (${diasPos[i]} positivas)`).join('<br>')}<br><br>📈 Dia com mais publicações: <strong>${melhorDia}</strong><br>😊 Dia com mais cobertura positiva: <strong>${melhorDiaPos}</strong>`,
       analysis:`${melhorDia} é o dia com maior volume de publicações. Para maximizar visibilidade, releases enviados na tarde de ${uteis[(uteis.indexOf(melhorDia)-1+5)%5]||'quinta-feira'} têm maior chance de publicação em ${melhorDia}.`,
       insights:[`Programe envio de releases para ${uteis[(uteis.indexOf(melhorDia)-1+5)%5]||'quinta-feira'} à tarde para publicação no dia mais ativo`,`Evite envio de comunicados críticos na ${dias[1]} — dia de menor volume e mais concorrido para atenção editorial`,`Crie um calendário editorial semanal com pautas temáticas alinhadas ao ritmo natural dos veículos`],
-      chartData:{type:'bar',data:{labels:uteis,datasets:[{label:'Total',data:ateisCount,backgroundColor:'rgba(99,179,237,.6)',borderRadius:4},{label:'Positivas',data:ateisPos,backgroundColor:'rgba(104,211,145,.75)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}}
+      chartData:{type:'bar',data:{labels:uteis,datasets:[{label:'Total',data:ateisCount,backgroundColor:'rgba(99,179,237,.6)',borderRadius:4},{label:'Positivas',data:ateisPos,backgroundColor:'rgba(104,211,145,.75)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:chartLegend()},scales:chartScales()}}
     };
   }
 
@@ -2356,7 +2571,7 @@ function localAnalyze(question, summary){
       text:`📉📈 <strong>Evolução de Sentimento${mentionedPlayer?' — '+mentionedPlayer:''}${keywords.length?' sobre '+keywords[0]:''}</strong><br><br>${months.map(k=>`• <strong>${k}</strong>: <span style="color:#68d391">+${monthlyPos[k]||0}</span> / <span style="color:#fc8181">-${monthlyNeg[k]||0}</span>`).join('<br>')}`,
       analysis:`A evolução do sentimento${mentionedPlayer?' do '+mentionedPlayer:''} ao longo dos meses revela tendências importantes. ${months.length>1?`O mês de ${months[months.length-1]} registrou ${monthlyPos[months[months.length-1]]||0} positivas e ${monthlyNeg[months[months.length-1]]||0} negativas.`:''}`,
       insights:[`Identifique eventos externos correlacionados com picos de negatividade para antecipar situações similares`,`Meses com queda de sentimento positivo exigem ação proativa — planeje pautas favoráveis para os períodos historicamente mais negativos`,`Crie um alerta automático: se negativos superarem positivos em qualquer mês, acionar plano de comunicação de crise`],
-      chartData:{type:'line',data:{labels:months,datasets:[{label:'Positivas',data:months.map(k=>monthlyPos[k]||0),borderColor:'#68d391',backgroundColor:'rgba(104,211,145,.08)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#68d391'},{label:'Negativas',data:months.map(k=>monthlyNeg[k]||0),borderColor:'#fc8181',backgroundColor:'rgba(252,129,129,.08)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#fc8181'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892ab',font:{size:11}}}},scales:{x:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#4a5270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}
+      chartData:{type:'line',data:{labels:months,datasets:[{label:'Positivas',data:months.map(k=>monthlyPos[k]||0),borderColor:'#68d391',backgroundColor:'rgba(104,211,145,.08)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#68d391'},{label:'Negativas',data:months.map(k=>monthlyNeg[k]||0),borderColor:'#fc8181',backgroundColor:'rgba(252,129,129,.08)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#fc8181'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:chartLegend()},scales:chartScales()}
     }};
   }
 
@@ -2370,7 +2585,44 @@ function localAnalyze(question, summary){
   };
 }
 
-// ─── LLM SELECTION ────────────────────────────────────────────────────────────
+// ─── THEME TOGGLE ────────────────────────────────────────────────────────────
+function toggleTheme(){
+  const root = document.documentElement;
+  const isLight = root.getAttribute('data-theme') === 'light';
+  if(isLight){
+    root.removeAttribute('data-theme');
+    localStorage.setItem('mia_theme','dark');
+  } else {
+    root.setAttribute('data-theme','light');
+    localStorage.setItem('mia_theme','light');
+  }
+  // Rebuild CHART_DEFAULTS with new colors
+  CHART_DEFAULTS = getChartDefaults();
+  // Rebuild all dashboard charts so their axes/legends update
+  setTimeout(()=>{
+    if(state.rawData.length){
+      Object.values(state.charts).forEach(c=>c&&c.destroy&&c.destroy());
+      state.charts={};
+      const filtered = state.activePlayer
+        ? state.rawData.filter(r=>getVal(r,'Player')===state.activePlayer)
+        : state.rawData;
+      buildSentimentoChart(filtered);
+      buildMidiaChart(filtered);
+      buildRPSChart(filtered);
+      buildTemporalChart(filtered);
+      buildProtagonismoChart(filtered);
+    }
+  }, 300); // wait for CSS transition to finish
+  showToast(isLight?'🌙':'☀️', isLight?'Tema escuro ativado':'Tema claro ativado');
+}
+
+function initTheme(){
+  const saved = localStorage.getItem('mia_theme');
+  if(saved === 'light'){
+    document.documentElement.setAttribute('data-theme','light');
+    CHART_DEFAULTS = getChartDefaults();
+  }
+}
 function selectLlm(id,icon,name){
   state.selectedLlm=id;
   state.selectedLlmName=name;
@@ -2468,6 +2720,8 @@ function escHtml(s){
 selectLlm('claude','🟠','Claude Sonnet');
 // Init environment badge
 initEnvBadge();
+// Init theme (restore saved preference)
+initTheme();
 </script>
 </body>
 </html>
