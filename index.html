@@ -2476,6 +2476,117 @@ function localAnalyze(question, summary){
     };
   }
 
+  // ── BUSCA COMBINADA: VEÍCULO + PLAYER + TEMA ─────────────────────────────
+  if(/veiculo|veículo|jornal|revista|portal/.test(q) && (mentionedPlayer || /santander|bradesco|itau|itaú|player/i.test(q)) && /tema|temas|sobre|esg|sustentabilidade|assunto/i.test(q)){
+    // Extrair veículo mencionado na query
+    let targetVeiculo = null;
+    
+    // Tentar match de veículos conhecidos primeiro (case-insensitive)
+    const knownVeiculos = ['Imprensa BR', 'Folha de S.Paulo', 'O Globo', 'Estadão', 'Estado de São Paulo', 'Valor Econômico', 'Exame', 'Veja', 'IstoÉ', 'Época'];
+    for(const v of knownVeiculos){
+      if(q.toLowerCase().includes(v.toLowerCase())){
+        targetVeiculo = v;
+        break;
+      }
+    }
+    
+    // Se não encontrou pelos conhecidos, tentar extrair do contexto
+    if(!targetVeiculo){
+      const veiculoMatch = q.match(/(?:veiculo|veículo|jornal|portal|revista)\s+([A-ZÀ-Ÿ][\wÀ-ÿ\s]+?)(?:\s+que|\s+com|\s+sobre|\s+mencion)/i);
+      if(veiculoMatch && veiculoMatch[1]){
+        targetVeiculo = veiculoMatch[1].trim();
+      }
+    }
+    
+    // Extrair player
+    let targetPlayer = mentionedPlayer;
+    if(!targetPlayer){
+      const playerMatch = q.match(/santander|bradesco|itau|itaú|nubank|stone|cielo|getnet|pagseguro/i);
+      if(playerMatch) targetPlayer = playerMatch[0];
+    }
+    
+    // Extrair keywords do tema
+    const keywords = extractKeywords(q);
+    
+    // Aplicar filtros
+    let filtered = d;
+    
+    // Filtro de veículo (case-insensitive, contains)
+    if(targetVeiculo){
+      filtered = filtered.filter(r=>{
+        const veic = (getVal(r,'Veiculo')||'').toLowerCase();
+        const target = targetVeiculo.toLowerCase();
+        // Tenta match exato ou contém
+        return veic.includes(target) || target.split(/\s+/).every(part=>veic.includes(part));
+      });
+    }
+    
+    // Filtro de player (case-insensitive, contains)
+    if(targetPlayer){
+      filtered = filtered.filter(r=>{
+        const player = (getVal(r,'Player')||'').toLowerCase();
+        return player.includes(targetPlayer.toLowerCase());
+      });
+    }
+    
+    // Filtro de tema (keywords em Temas, Titulo ou Conteudo)
+    if(keywords.length > 0){
+      filtered = filtered.filter(r=>{
+        const tema = (getVal(r,'Temas')||getVal(r,'Tema')||'').toLowerCase();
+        const titulo = (getVal(r,'Titulo')||getVal(r,'Título')||'').toLowerCase();
+        const conteudo = (getVal(r,'Conteudo')||getVal(r,'Conteúdo')||'').toLowerCase().substring(0,300);
+        return keywords.some(kw=>tema.includes(kw)||titulo.includes(kw)||conteudo.includes(kw));
+      });
+    }
+    
+    if(!filtered.length){
+      return {
+        text:`🔍 <strong>Busca combinada</strong><br><br>Não foram encontrados registros${targetVeiculo?' no veículo <strong>'+targetVeiculo+'</strong>':''}${targetPlayer?' mencionando <strong>'+targetPlayer+'</strong>':''}${keywords.length?' com o tema <strong>'+keywords.join(', ')+'</strong>':''} durante o período analisado.<br><br>📌 <strong>Critérios aplicados:</strong><br>${targetVeiculo?'• Veículo contém: '+targetVeiculo+'<br>':''}${targetPlayer?'• Player contém: '+targetPlayer+'<br>':''}${keywords.length?'• Tema contém: '+keywords.join(' ou ')+'<br>':''}<br>💡 Tente:<br>• Verificar a ortografia do veículo e tema<br>• Buscar por partes do nome (ex: "Imprensa" ao invés de "Imprensa BR")<br>• Listar primeiro todos os veículos disponíveis`,
+        analysis:'Verifique se os campos Veiculo, Player e Temas estão corretamente preenchidos na planilha.',
+        insights:[
+          'Use "Quais os veículos?" para ver todos os veículos disponíveis na base',
+          'Use "Quais os temas?" para ver todos os temas catalogados',
+          'Confira se a grafia do veículo na planilha corresponde exatamente ao buscado'
+        ],
+        chartData: null
+      };
+    }
+    
+    // Montar resposta
+    const sentPos = filtered.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length;
+    const sentNeg = filtered.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('neg')).length;
+    const sentNeu = filtered.length - sentPos - sentNeg;
+    
+    // Listar as notícias encontradas
+    const newsListHtml = filtered.slice(0,10).map((r,i)=>{
+      const titulo = getVal(r,'Titulo')||getVal(r,'Título')||'Sem título';
+      const data = parseDate(r);
+      const dataStr = data ? data.toLocaleDateString('pt-BR') : '?';
+      const sent = getVal(r,'Sentimento')||'?';
+      const tema = getVal(r,'Temas')||getVal(r,'Tema')||'?';
+      const sentColor = sent.toLowerCase().includes('pos')?'#68d391':sent.toLowerCase().includes('neg')?'#fc8181':'#8892ab';
+      return `<div style="padding:8px 0;border-bottom:1px solid var(--border);"><strong>${i+1}. ${titulo.substring(0,80)}${titulo.length>80?'...':''}</strong><br><span style="font-size:12px;color:var(--text3);">${dataStr} · <span style="color:${sentColor}">${sent}</span> · ${tema.substring(0,40)}</span></div>`;
+    }).join('');
+    
+    // Resumo de conteúdo das notícias encontradas
+    const contentSummary = filtered.slice(0,5).map(r=>{
+      const titulo = getVal(r,'Titulo')||getVal(r,'Título')||'';
+      const conteudo = (getVal(r,'Conteudo')||getVal(r,'Conteúdo')||'').substring(0,150);
+      return `• ${titulo} — ${conteudo}${conteudo.length>=150?'...':''}`;
+    }).join('<br><br>');
+    
+    return {
+      text:`🔍 <strong>Resultado da busca combinada</strong><br><br>Encontradas <strong>${filtered.length}</strong> notícias${targetVeiculo?' no veículo <strong>'+targetVeiculo+'</strong>':''}${targetPlayer?' mencionando <strong>'+targetPlayer+'</strong>':''}${keywords.length?' sobre <strong>'+keywords.join(', ')+'</strong>':''}<br><br>📊 Sentimento: <span style="color:#68d391">${sentPos} positivas</span> · <span style="color:#fc8181">${sentNeg} negativas</span> · ${sentNeu} neutras<br><br><strong>Notícias encontradas:</strong><br>${newsListHtml}${filtered.length>10?`<br><em style="font-size:12px;color:var(--text3);">... e mais ${filtered.length-10} notícias</em>`:''}`,
+      analysis:`${filtered.length===1?'Foi encontrada 1 notícia':'Foram encontradas '+filtered.length+' notícias'} que atendem aos critérios de busca. ${sentPos>sentNeg?'A maioria é positiva, indicando boa cobertura.':sentNeg>sentPos?'Predomina cobertura negativa — atenção necessária.':'A cobertura é balanceada entre positiva e negativa.'}`,
+      insights:[
+        filtered.length<5?`Volume baixo — considere ações de relacionamento com ${targetVeiculo||'este veículo'} para ampliar a presença`:`Volume adequado — mantenha o relacionamento ativo com ${targetVeiculo||'o veículo'}`,
+        sentNeg>0?`Analise as ${sentNeg} notícias negativas para entender os pontos de tensão e preparar argumentários de resposta`:'Continue o trabalho de pauta positiva para manter o sentimento favorável',
+        `Compartilhe estas notícias com a equipe de comunicação e porta-vozes para alinhamento estratégico`
+      ],
+      chartData: filtered.length>1 ? doughnutChart(['Positivas','Negativas','Neutras'],[sentPos,sentNeg,sentNeu]) : null
+    };
+  }
+
   // ── BUSCA POR TEMA / TERMO ESPECÍFICO ─────────────────────────────────────
   if(/esg|sustentabilidade|inovacao|inovação|credito|crédito|pix|open.?finance|inflacao|inflação|fraude|crise|resultado|lucro|dividendo|expansao|expansão/.test(q)||/noticias (sobre|de|com) .+/.test(q)||/materia.* (sobre|de) .+/.test(q)){
     const keywords = extractKeywords(q);
