@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>APP Media Intelligence</title>
+<title>APP Media Intelligence v6.0</title>
 <meta name="description" content="Ferramenta de Inteligência de Mídia com análise IA para profissionais de comunicação">
 <meta name="theme-color" content="#07080f">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -793,6 +793,377 @@
   .scroll-area{overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--bg4) transparent;}
   .scroll-area::-webkit-scrollbar{width:4px;}
   .scroll-area::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px;}
+
+  /* ══════════════════════════════════════════════
+     BRIEFING PAGE STYLES
+  ══════════════════════════════════════════════ */
+  .briefing-hero {
+    text-align:center; padding:36px 0 28px;
+  }
+  .briefing-date {
+    font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--text3); margin-bottom:8px;
+  }
+  .briefing-headline {
+    font-size:clamp(20px,2.5vw,32px); font-weight:700;
+    letter-spacing:-.02em; line-height:1.2; margin-bottom:6px;
+    color:var(--text);
+  }
+  .briefing-headline em { font-style:normal; color:var(--accent3); }
+  .briefing-headline .risco-em { color:var(--accent-neg); }
+  .briefing-sub-line {
+    color:var(--text2); font-size:14px; margin-bottom:20px;
+  }
+  /* Mode Toggle */
+  .mode-toggle-wrap {
+    display:inline-flex; background:var(--bg3); border:1px solid var(--border);
+    border-radius:8px; padding:4px; gap:4px; margin-top:12px;
+  }
+  .mode-btn {
+    padding:8px 20px; border-radius:6px; font-size:13px; font-weight:500;
+    border:none; cursor:pointer; background:transparent; color:var(--text2);
+    transition:all .2s; font-family:'Inter',sans-serif;
+  }
+  .mode-btn.active {
+    background:var(--bg2); color:var(--accent);
+    box-shadow: 0 1px 4px rgba(0,0,0,.15);
+    border:1px solid var(--border-active);
+  }
+  /* Score Row */
+  .briefing-scores {
+    display:grid; grid-template-columns:1fr 1fr 1fr;
+    gap:16px; margin-bottom:24px;
+  }
+  /* MPS Card */
+  .mps-card {
+    background:var(--bg2); border:1px solid var(--border);
+    border-radius:8px; padding:20px; text-align:center;
+  }
+  .mps-card-title {
+    font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--text3); margin-bottom:12px; font-weight:600;
+  }
+  .mps-gauge-wrap {
+    position:relative; width:88px; height:88px; margin:0 auto 10px;
+  }
+  .mps-gauge-svg { width:88px; height:88px; transform:rotate(-90deg); }
+  .mps-gauge-bg { fill:none; stroke:var(--bg4); stroke-width:8; }
+  .mps-gauge-fill { fill:none; stroke-width:8; stroke-linecap:round;
+    transition:stroke-dashoffset .8s ease; }
+  .mps-gauge-text {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+  }
+  .mps-number { font-weight:700; font-size:22px; letter-spacing:-.02em; }
+  .mps-pts { font-size:9px; color:var(--text3); text-transform:uppercase; letter-spacing:.05em; }
+  .mps-label {
+    font-size:12px; font-weight:600; padding:3px 10px; border-radius:6px;
+    margin-top:4px; display:inline-block;
+  }
+  /* Thermometer */
+  .thermo-card {
+    background:var(--bg2); border:1px solid var(--border);
+    border-radius:8px; padding:20px;
+  }
+  .thermo-card-title {
+    font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--text3); margin-bottom:12px; font-weight:600;
+  }
+  .thermo-body {
+    display:flex; align-items:center; gap:16px;
+  }
+  .thermo-visual {
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+  }
+  .thermo-track {
+    width:20px; height:80px; border-radius:10px;
+    background:var(--bg4); position:relative; overflow:hidden;
+  }
+  .thermo-fill {
+    position:absolute; bottom:0; left:0; right:0;
+    border-radius:10px; transition:height .8s ease;
+  }
+  .thermo-bulb {
+    width:24px; height:24px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:10px;
+  }
+  .thermo-labels { flex:1; }
+  .thermo-row {
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:12px; padding:3px 0;
+  }
+  .thermo-row-label { color:var(--text2); }
+  .thermo-row-val { font-weight:600; }
+  /* Podium */
+  .podium-card {
+    background:var(--bg2); border:1px solid var(--border);
+    border-radius:8px; padding:20px;
+  }
+  .podium-card-title {
+    font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--text3); margin-bottom:12px; font-weight:600;
+  }
+  .podium-wrap {
+    display:flex; align-items:flex-end; justify-content:center;
+    gap:8px; height:80px;
+  }
+  .podium-item {
+    display:flex; flex-direction:column; align-items:center;
+    justify-content:flex-end; gap:4px; flex:1;
+  }
+  .podium-bar {
+    width:100%; border-radius:4px 4px 0 0; min-height:10px;
+    transition:height .6s ease;
+  }
+  .podium-name {
+    font-size:10px; color:var(--text2); text-align:center;
+    max-width:60px; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; margin-top:4px;
+  }
+  .podium-pct { font-size:11px; font-weight:600; color:var(--accent); }
+  .podium-crown { font-size:14px; }
+  /* Briefing Cards Grid */
+  .briefing-cards-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:14px; margin-bottom:24px;
+  }
+  .bc-card {
+    background:var(--bg2); border:1px solid var(--border);
+    border-radius:8px; padding:18px;
+    transition:border-color .2s, transform .15s;
+    position:relative; overflow:hidden;
+  }
+  .bc-card:hover { border-color:var(--border-active); transform:translateY(-2px); }
+  .bc-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  }
+  .bc-card.bc-resumo::before { background:var(--accent); }
+  .bc-card.bc-insight::before { background:#f6ad55; }
+  .bc-card.bc-risco::before { background:var(--accent-neg); }
+  .bc-card.bc-oportunidade::before { background:var(--accent3); }
+  .bc-card.bc-recomendacao::before { background:#b794f4; }
+  .bc-header {
+    display:flex; align-items:center; gap:8px; margin-bottom:10px;
+  }
+  .bc-icon { font-size:18px; }
+  .bc-label {
+    font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--text3); font-weight:600;
+  }
+  .bc-content {
+    font-size:13px; line-height:1.6; color:var(--text2);
+  }
+  .bc-content strong { color:var(--text); }
+  /* Quick Actions */
+  .qa-section { margin-bottom:24px; }
+  .qa-title {
+    font-size:12px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--text3); font-weight:600; margin-bottom:10px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .qa-title::before {
+    content:''; width:3px; height:12px; background:var(--accent);
+    border-radius:2px;
+  }
+  .qa-grid {
+    display:flex; flex-wrap:wrap; gap:8px;
+  }
+  .qa-btn {
+    padding:8px 14px; border-radius:8px; font-size:13px; font-weight:500;
+    border:1px solid var(--border); background:var(--bg2); color:var(--text2);
+    cursor:pointer; transition:all .15s; font-family:'Inter',sans-serif;
+    display:flex; align-items:center; gap:6px;
+  }
+  .qa-btn:hover {
+    border-color:var(--accent); color:var(--accent); background:var(--glow);
+    transform:translateY(-1px);
+  }
+  /* Suggested Questions */
+  .sq-section { margin-bottom:24px; }
+  .sq-title {
+    font-size:12px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--text3); font-weight:600; margin-bottom:10px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .sq-title::before {
+    content:''; width:3px; height:12px; background:#f6ad55;
+    border-radius:2px;
+  }
+  .sq-grid {
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:8px;
+  }
+  .sq-btn {
+    padding:10px 14px; border-radius:8px; font-size:12px;
+    border:1px solid var(--border); background:var(--bg2); color:var(--text2);
+    cursor:pointer; transition:all .15s; font-family:'Inter',sans-serif;
+    text-align:left; line-height:1.4;
+  }
+  .sq-btn:hover {
+    border-color:rgba(246,173,85,.5); color:#f6ad55;
+    background:rgba(246,173,85,.05); transform:translateY(-1px);
+  }
+  /* ══════════════════════════════════════════════
+     ALERTAS PAGE STYLES
+  ══════════════════════════════════════════════ */
+  .alerta-card {
+    background:var(--bg2); border:1px solid var(--border);
+    border-radius:8px; padding:20px; margin-bottom:14px;
+    display:flex; align-items:flex-start; gap:16px;
+    transition:border-color .2s, transform .15s;
+    position:relative; overflow:hidden;
+    animation:fadeUp .3s ease;
+  }
+  .alerta-card:hover { transform:translateY(-1px); }
+  .alerta-card.alerta-critical { border-left:3px solid var(--accent-neg); }
+  .alerta-card.alerta-warning { border-left:3px solid #f6ad55; }
+  .alerta-card.alerta-info { border-left:3px solid var(--accent); }
+  .alerta-card.alerta-success { border-left:3px solid var(--accent3); }
+  .alerta-icon { font-size:28px; flex-shrink:0; }
+  .alerta-body { flex:1; }
+  .alerta-title {
+    font-weight:600; font-size:15px; margin-bottom:4px; letter-spacing:-.01em;
+  }
+  .alerta-desc { font-size:13px; color:var(--text2); line-height:1.5; }
+  .alerta-meta {
+    display:flex; align-items:center; gap:12px; margin-top:10px;
+    flex-wrap:wrap;
+  }
+  .alerta-badge {
+    padding:2px 10px; border-radius:6px; font-size:11px; font-weight:600;
+  }
+  .badge-critical { background:rgba(248,81,73,.12); color:#f85149; }
+  .badge-warning { background:rgba(246,173,85,.12); color:#f6ad55; }
+  .badge-info { background:rgba(88,166,255,.12); color:#58a6ff; }
+  .badge-success { background:rgba(86,211,100,.12); color:#56d364; }
+  .alerta-action-btn {
+    padding:6px 12px; border-radius:6px; font-size:12px; font-weight:500;
+    border:1px solid var(--border); background:transparent; color:var(--text2);
+    cursor:pointer; transition:all .15s; font-family:'Inter',sans-serif;
+  }
+  .alerta-action-btn:hover {
+    border-color:var(--accent); color:var(--accent); background:var(--glow);
+  }
+  /* ══════════════════════════════════════════════
+     DASHBOARD INSIGHT TEXT STYLES
+  ══════════════════════════════════════════════ */
+  .chart-insight {
+    margin-top:10px; padding:10px 12px;
+    background:var(--glow); border-radius:6px;
+    font-size:12px; line-height:1.55; color:var(--text2);
+    border-left:2px solid var(--accent);
+  }
+  .chart-insight strong { color:var(--accent); }
+  /* Winner card */
+  .winner-section { margin-bottom:28px; }
+  .winner-banner {
+    background:linear-gradient(135deg,rgba(88,166,255,.08),rgba(86,211,100,.05));
+    border:1px solid var(--border-active); border-radius:8px;
+    padding:16px 20px; display:flex; align-items:center; gap:16px;
+  }
+  .winner-trophy { font-size:32px; }
+  .winner-text { flex:1; }
+  .winner-title { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--accent); font-weight:600; margin-bottom:4px; }
+  .winner-name { font-weight:700; font-size:20px; letter-spacing:-.01em; }
+  .winner-stats { font-size:12px; color:var(--text2); margin-top:4px; }
+  /* Crisis Shield */
+  .shield-card {
+    background:var(--bg2); border:1px solid var(--border);
+    border-radius:8px; padding:20px; display:flex; align-items:center; gap:14px;
+    margin-bottom:20px;
+  }
+  .shield-icon { font-size:40px; }
+  .shield-info { flex:1; }
+  .shield-title { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--text3); font-weight:600; margin-bottom:4px; }
+  .shield-status { font-weight:700; font-size:16px; }
+  .shield-desc { font-size:12px; color:var(--text2); margin-top:4px; }
+  /* ══════════════════════════════════════════════
+     CHAT ACTION BOX
+  ══════════════════════════════════════════════ */
+  .action-box {
+    margin-top:12px; background:rgba(88,166,255,.04);
+    border:1px solid rgba(88,166,255,.15); border-radius:8px; padding:12px 14px;
+  }
+  .action-box-title {
+    font-size:11px; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--accent); font-weight:600; margin-bottom:8px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .action-box-btns { display:flex; flex-wrap:wrap; gap:6px; }
+  .action-box-btn {
+    padding:5px 10px; border-radius:6px; font-size:11px; font-weight:500;
+    border:1px solid var(--border-active); background:transparent;
+    color:var(--accent); cursor:pointer; transition:all .15s;
+    font-family:'Inter',sans-serif;
+  }
+  .action-box-btn:hover { background:var(--glow); transform:translateY(-1px); }
+  /* ══════════════════════════════════════════════
+     RELATORIO 1 MIN
+  ══════════════════════════════════════════════ */
+  .relatorio-section {
+    background:linear-gradient(135deg,rgba(88,166,255,.06),rgba(86,211,100,.04));
+    border:1px solid var(--border-active); border-radius:8px;
+    padding:16px 20px; margin-bottom:20px;
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:12px;
+  }
+  .relatorio-info { flex:1; }
+  .relatorio-title { font-weight:600; font-size:14px; margin-bottom:3px; }
+  .relatorio-sub { font-size:12px; color:var(--text2); }
+  .notif-count {
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:18px; height:18px; border-radius:9px;
+    background:var(--accent-neg); color:#fff; font-size:10px; font-weight:700;
+    padding:0 4px; position:absolute; top:-4px; right:-4px;
+  }
+  /* Analyst mode extra */
+  .analyst-extra { display:none; }
+  .mode-analyst .analyst-extra { display:block; }
+  /* Responsive briefing */
+  @media(max-width:700px){
+    .briefing-scores { grid-template-columns:1fr; }
+    .briefing-cards-grid { grid-template-columns:1fr; }
+  }
+
+
+  /* ══════════════════ PLAYER SELECTION PANEL ══════════════════ */
+  .player-select-panel {
+    display:none; margin-top:22px;
+    background:var(--bg2); border:1px solid var(--border-active);
+    border-radius:10px; padding:24px 28px; animation:fadeUp .3s ease;
+  }
+  .player-select-panel.show { display:block; }
+  .player-select-title { font-weight:700; font-size:16px; letter-spacing:-.01em; margin-bottom:4px; }
+  .player-select-sub { font-size:13px; color:var(--text2); margin-bottom:18px; line-height:1.6; }
+  .player-select-sub em { color:var(--accent); font-style:normal; font-weight:600; }
+  .player-cards-grid {
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:10px; margin-bottom:18px;
+  }
+  .player-card {
+    border:2px solid var(--border); border-radius:8px;
+    padding:14px 12px; cursor:pointer; text-align:center;
+    transition:all .2s; background:var(--bg3); position:relative; overflow:hidden;
+  }
+  .player-card:hover { border-color:var(--accent); background:var(--glow); transform:translateY(-2px); }
+  .player-card.selected { border-color:var(--accent); background:rgba(88,166,255,.08); box-shadow:0 0 0 2px rgba(88,166,255,.2); }
+  .player-card.selected::after { content:'✓'; position:absolute; top:6px; right:8px; font-size:13px; font-weight:700; color:var(--accent); }
+  .player-card-icon { font-size:26px; margin-bottom:6px; }
+  .player-card-name { font-weight:600; font-size:13px; letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .player-card-stats { font-size:11px; color:var(--text3); margin-top:3px; }
+  .player-select-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .player-select-note { font-size:12px; color:var(--text3); flex:1; min-width:160px; }
+  /* topbar badge */
+  .sel-player-badge {
+    display:none; align-items:center; gap:6px; padding:4px 12px; border-radius:6px;
+    background:rgba(88,166,255,.1); border:1px solid rgba(88,166,255,.25);
+    font-size:12px; font-weight:600; color:var(--accent); cursor:pointer;
+  }
+  .sel-player-badge.show { display:flex; }
+  .sel-player-badge:hover { background:rgba(88,166,255,.18); }
+
 </style>
 </head>
 <body>
@@ -801,7 +1172,7 @@
 <nav class="sidebar">
   <div class="sidebar-logo">
     <div class="logo-tag">Ferramenta Pro</div>
-    <div class="logo-title">APP <span>Media</span><br>Intelligence</div>
+    <div class="logo-title">APP <span>Media</span><br>Intelligence <small style="font-size:10px;color:var(--text3);">v6.0</small></div>
   </div>
 
   <div class="sidebar-section">
@@ -810,6 +1181,10 @@
       <span class="nav-icon">⬆</span>
       <span class="nav-label">Importar Dados</span>
     </div>
+    <div class="sidebar-nav-item" onclick="showPage('briefing')" id="nav-briefing">
+      <span class="nav-icon">🌅</span>
+      <span class="nav-label">Briefing</span>
+    </div>
     <div class="sidebar-nav-item" onclick="showPage('dashboard')" id="nav-dashboard">
       <span class="nav-icon">◼</span>
       <span class="nav-label">Dashboard</span>
@@ -817,6 +1192,10 @@
     <div class="sidebar-nav-item" onclick="showPage('chat')" id="nav-chat">
       <span class="nav-icon"><i data-lucide="message-square"></i></span>
       <span class="nav-label">Chat IA</span>
+    </div>
+    <div class="sidebar-nav-item" onclick="showPage('alertas')" id="nav-alertas">
+      <span class="nav-icon" style="position:relative">🔔<span class="notif-count" id="alertaCount" style="display:none">0</span></span>
+      <span class="nav-label">Alertas</span>
     </div>
     <div class="sidebar-nav-item" onclick="showPage('data')" id="nav-data">
       <span class="nav-icon">⊞</span>
@@ -844,6 +1223,9 @@
       <span class="topbar-breadcrumb" id="pageBreadcrumb">↗ Upload da planilha Excel</span>
     </div>
     <div class="topbar-right">
+      <div class="sel-player-badge" id="selPlayerBadge" onclick="showPage('upload')" title="Trocar player principal">
+        <span id="selPlayerBadgeText">🎯 —</span> <span style="opacity:.5;font-size:10px;">✏</span>
+      </div>
       <div class="theme-toggle-wrap">
         <span style="font-size:12px;font-weight:500;">Tema</span>
         <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Alternar tema claro/escuro">
@@ -891,12 +1273,25 @@
         <div class="file-info-icon">✅</div>
         <div style="flex:1">
           <div class="file-info-name" id="fileName">—</div>
-          <div class="file-info-meta">
-            <span id="fileRows">—</span>
-            <span id="fileSize">—</span>
-          </div>
+          <div class="file-info-meta"><span id="fileRows">—</span><span id="fileSize">—</span></div>
         </div>
-        <button class="btn btn-primary" onclick="goToAnalysis()">Analisar →</button>
+      </div>
+
+      <!-- PLAYER SELECTION (aparece após importação) -->
+      <div class="player-select-panel" id="playerSelectPanel">
+        <div class="player-select-title">🎯 Selecione o Player Principal</div>
+        <div class="player-select-sub">
+          Escolha <em>qual marca será o foco</em> do Briefing Diário e dos Alertas.<br>
+          Os concorrentes continuarão disponíveis no Dashboard e Chat IA.
+        </div>
+        <div class="player-cards-grid" id="playerCardsGrid"></div>
+        <div class="player-select-actions">
+          <span class="player-select-note">💡 Você pode trocar o player principal a qualquer momento voltando aqui.</span>
+          <button class="btn btn-secondary" onclick="openAllPlayers()" style="font-size:13px;">Ver todos os players →</button>
+          <button class="btn btn-primary" id="btnGoAnalysis" onclick="confirmarPlayer()" disabled style="font-size:13px;">
+            Abrir Briefing do Player →
+          </button>
+        </div>
       </div>
 
       <div class="llm-selector">
@@ -920,6 +1315,163 @@
     </div>
   </div>
 
+
+  <!-- PAGE: BRIEFING (v6.0) -->
+  <div class="page" id="page-briefing">
+    <div style="max-width:1100px;margin:0 auto;">
+      <!-- Hero -->
+      <div class="briefing-hero">
+        <div class="briefing-date" id="briefingDate">Carregando...</div>
+        <h1 class="briefing-headline" id="briefingHeadline">🌅 Importe uma planilha para gerar seu <em>Briefing Diário</em></h1>
+        <div class="briefing-sub-line" id="briefingSubLine">Seu copiloto estratégico de comunicação</div>
+        <div style="display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px;">
+          <div id="briefingPlayerTag" style="display:none;padding:4px 14px;border-radius:20px;font-size:13px;font-weight:600;background:rgba(88,166,255,.1);border:1px solid rgba(88,166,255,.25);color:var(--accent);">
+            🎯 <span id="briefingPlayerName">—</span>
+          </div>
+          <div class="mode-toggle-wrap" style="margin:0;">
+            <button class="mode-btn active" id="modeExec" onclick="setMode('exec')">👔 Executivo</button>
+            <button class="mode-btn" id="modeAnalyst" onclick="setMode('analyst')">🔬 Analista</button>
+          </div>
+          <button class="btn btn-ghost" onclick="showPage('upload')" style="padding:6px 12px;font-size:12px;">✏️ Trocar player</button>
+        </div>
+      </div>
+
+      <!-- Scores Row: MPS + Termômetro + Pódio -->
+      <div class="briefing-scores" id="briefingScores">
+        <!-- MPS -->
+        <div class="mps-card" id="mpsCard">
+          <div class="mps-card-title">Media Performance Score</div>
+          <div class="mps-gauge-wrap">
+            <svg class="mps-gauge-svg" viewBox="0 0 88 88">
+              <circle class="mps-gauge-bg" cx="44" cy="44" r="36"/>
+              <circle class="mps-gauge-fill" id="mpsGaugeFill" cx="44" cy="44" r="36"
+                stroke="#58a6ff" stroke-dasharray="226.2" stroke-dashoffset="226.2"/>
+            </svg>
+            <div class="mps-gauge-text">
+              <span class="mps-number" id="mpsScore">—</span>
+              <span class="mps-pts">pts</span>
+            </div>
+          </div>
+          <div id="mpsLabel" class="mps-label">Aguardando</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:8px;" id="mpsDesc">Carregue dados para calcular</div>
+        </div>
+
+        <!-- Termômetro de Reputação -->
+        <div class="thermo-card">
+          <div class="thermo-card-title">🌡️ Termômetro de Reputação</div>
+          <div class="thermo-body" id="thermoBody">
+            <div class="thermo-visual">
+              <div class="thermo-track">
+                <div class="thermo-fill" id="thermoFill" style="height:0%;background:var(--accent3);"></div>
+              </div>
+              <div class="thermo-bulb" id="thermoBulb" style="background:var(--bg3);">🌡</div>
+            </div>
+            <div class="thermo-labels" id="thermoLabels">
+              <div style="color:var(--text3);font-size:12px;">Aguardando dados...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pódio de Visibilidade -->
+        <div class="podium-card">
+          <div class="podium-card-title">🏆 Pódio de Visibilidade</div>
+          <div id="podiumWrap">
+            <div style="color:var(--text3);font-size:12px;text-align:center;padding:20px 0;">Aguardando dados...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5 Briefing Cards -->
+      <div class="briefing-cards-grid" id="briefingCards">
+        <div class="bc-card bc-resumo">
+          <div class="bc-header"><span class="bc-icon">📋</span><span class="bc-label">Resumo Executivo</span></div>
+          <div class="bc-content" id="bcResumo">Importe dados para gerar o resumo executivo automático.</div>
+        </div>
+        <div class="bc-card bc-insight">
+          <div class="bc-header"><span class="bc-icon">💡</span><span class="bc-label">Principal Insight</span></div>
+          <div class="bc-content" id="bcInsight">O principal insight da sua cobertura de mídia aparecerá aqui.</div>
+        </div>
+        <div class="bc-card bc-risco">
+          <div class="bc-header"><span class="bc-icon">⚠️</span><span class="bc-label">Risco Detectado</span></div>
+          <div class="bc-content" id="bcRisco">Análise de riscos será gerada automaticamente com seus dados.</div>
+        </div>
+        <div class="bc-card bc-oportunidade">
+          <div class="bc-header"><span class="bc-icon">🚀</span><span class="bc-label">Oportunidade</span></div>
+          <div class="bc-content" id="bcOportunidade">As oportunidades de comunicação serão identificadas aqui.</div>
+        </div>
+        <div class="bc-card bc-recomendacao">
+          <div class="bc-header"><span class="bc-icon">✅</span><span class="bc-label">Recomendação Acionável</span></div>
+          <div class="bc-content" id="bcRecomendacao">A recomendação estratégica principal será exibida aqui.</div>
+        </div>
+      </div>
+
+      <!-- Escudo de Crise (analyst extra) -->
+      <div class="shield-card" id="shieldCard">
+        <div class="shield-icon" id="shieldIcon">🛡️</div>
+        <div class="shield-info">
+          <div class="shield-title">Escudo de Crise</div>
+          <div class="shield-status" id="shieldStatus">Aguardando dados</div>
+          <div class="shield-desc" id="shieldDesc">Monitoramento de crise em tempo real baseado no volume de negatividade</div>
+        </div>
+        <div id="shieldPct" style="font-size:28px;font-weight:700;color:var(--text3);">—%</div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="qa-section">
+        <div class="qa-title">Ações Rápidas</div>
+        <div class="qa-grid">
+          <button class="qa-btn" onclick="qaAction('mencoes')">👤 Quem falou de mim?</button>
+          <button class="qa-btn" onclick="qaAction('criticas')">🔴 Ver críticas</button>
+          <button class="qa-btn" onclick="qaAction('sov')">📊 Share of Voice</button>
+          <button class="qa-btn" onclick="qaAction('portatvozes')">🎙️ Porta-vozes</button>
+          <button class="qa-btn" onclick="qaAction('temas')">🔖 Top Temas</button>
+          <button class="qa-btn" onclick="qaAction('alertas')">🔔 Ver Alertas</button>
+          <button class="qa-btn" onclick="gerarRelatorio1Min()">📄 Relatório 1 Minuto</button>
+          <button class="qa-btn" onclick="qaAction('story')">📖 Storytelling Semanal</button>
+        </div>
+      </div>
+
+      <!-- Perguntas Sugeridas -->
+      <div class="sq-section">
+        <div class="sq-title">Perguntas que você pode não saber fazer</div>
+        <div class="sq-grid" id="suggestedQsGrid">
+          <button class="sq-btn" onclick="goChat(this)">📈 Como está evoluindo meu Share of Voice nos últimos 3 meses?</button>
+          <button class="sq-btn" onclick="goChat(this)">😰 Existe algum risco de crise se baseando nos temas negativos?</button>
+          <button class="sq-btn" onclick="goChat(this)">🎙️ Quais porta-vozes geram mais cobertura positiva?</button>
+          <button class="sq-btn" onclick="goChat(this)">📰 Quais veículos dão mais destaque para minha marca?</button>
+          <button class="sq-btn" onclick="goChat(this)">🏆 Em quais temas estou sendo protagonista?</button>
+          <button class="sq-btn" onclick="goChat(this)">🔍 Algum concorrente está tomando meu espaço na mídia?</button>
+          <button class="sq-btn" onclick="goChat(this)">📅 Qual o melhor dia e horário para enviar releases?</button>
+          <button class="sq-btn" onclick="goChat(this)">💰 Qual foi o retorno em AVE do último mês?</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: ALERTAS (v6.0) -->
+  <div class="page" id="page-alertas">
+    <div class="section-header">
+      <div>
+        <div class="section-title">🔔 Alertas Inteligentes</div>
+        <div class="section-sub">Monitoramento proativo de riscos e oportunidades em tempo real</div>
+        <div id="alertasPlayerTag" style="display:none;margin-top:6px;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.2);color:var(--accent);">
+          🎯 Foco: <span id="alertasPlayerName">—</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-secondary" onclick="renderAlertas()">🔄 Atualizar</button>
+        <button class="btn btn-primary" onclick="showPage('chat')">💬 Analisar no Chat →</button>
+      </div>
+    </div>
+    <div id="alertasList">
+      <div class="empty-state">
+        <div class="empty-icon">🔔</div>
+        <div class="empty-title">Nenhum dado carregado</div>
+        <div class="empty-sub">Importe uma planilha para ativar o monitoramento inteligente de alertas.</div>
+      </div>
+    </div>
+  </div>
+
   <!-- PAGE: DASHBOARD -->
   <div class="page" id="page-dashboard">
     <div class="section-header">
@@ -931,6 +1483,7 @@
         <select class="input-field" id="playerFilter" onchange="renderDashboard()" style="width:160px;padding:8px 12px;">
           <option value="">Todos os Players</option>
         </select>
+        <button class="btn btn-secondary" onclick="filtrarDashMainPlayer()" title="Filtrar pelo player principal">🎯 Meu Player</button>
         <button class="btn btn-secondary" onclick="showPage('chat')">💬 Chat IA →</button>
       </div>
     </div>
@@ -955,7 +1508,11 @@
             <div style="font-weight:600;letter-spacing:-.01em;font-size:14px;">Analista IA</div>
             <div style="font-size:11px;color:var(--text3);" id="chatModelLabel">Modelo: não selecionado</div>
           </div>
-          <div style="margin-left:auto;display:flex;gap:8px;">
+          <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+            <div class="mode-toggle-wrap" style="margin:0;">
+              <button class="mode-btn active" id="chatModeExec" onclick="setChatMode('exec')" title="Resumo, insights e recomendações">👔 Exec</button>
+              <button class="mode-btn" id="chatModeAnalyst" onclick="setChatMode('analyst')" title="Métricas detalhadas e cruzamentos">🔬 Analista</button>
+            </div>
             <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;" onclick="clearChat()">🗑 Limpar</button>
           </div>
         </div>
@@ -982,6 +1539,9 @@
             <div class="quick-q" onclick="useQuickQ(this)">📰 Top veículos</div>
             <div class="quick-q" onclick="useQuickQ(this)">🎯 Protagonismo</div>
             <div class="quick-q" onclick="useQuickQ(this)">🧭 Motivação das notícias</div>
+            <div class="quick-q" onclick="useQuickQ(this)" style="background:rgba(246,173,85,.07);border-color:rgba(246,173,85,.3);color:#f6ad55;">📖 Storytelling semanal da marca</div>
+            <div class="quick-q" onclick="useQuickQ(this)" style="background:rgba(248,81,73,.07);border-color:rgba(248,81,73,.3);color:#f85149;">🚨 Riscos e crises emergentes</div>
+            <div class="quick-q" onclick="useQuickQ(this)" style="background:rgba(86,211,100,.07);border-color:rgba(86,211,100,.3);color:#56d364;">💡 Oportunidades identificadas</div>
           </div>
           <div class="chat-input-row">
             <textarea class="chat-textarea" id="chatInput" placeholder="Ex: Qual o sentimento médio do Bradesco nos últimos 30 dias?" rows="1" onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
@@ -1110,13 +1670,16 @@ function showPage(page){
   if(nav) nav.classList.add('active');
   else document.querySelectorAll('.sidebar-nav-item')[0].classList.add('active');
   state.currentPage = page;
-  const titles = {upload:'Importar Dados',dashboard:'Dashboard',chat:'Chat IA',data:'Base de Dados'};
-  const subs = {upload:'Upload da planilha Excel',dashboard:'Visão geral e métricas',chat:'Análise em linguagem natural',data:'Tabela de notícias'};
+  const titles = {upload:'Importar Dados',briefing:'Briefing Diário',dashboard:'Dashboard',chat:'Chat IA',alertas:'Alertas Inteligentes',data:'Base de Dados'};
+  const subs = {upload:'Upload da planilha Excel',briefing:'Copiloto estratégico de comunicação',dashboard:'Visão geral e métricas',chat:'Análise em linguagem natural',alertas:'Monitoramento proativo',data:'Tabela de notícias'};
   document.getElementById('pageTitle').textContent = titles[page]||page;
   document.getElementById('pageBreadcrumb').textContent = '↗ '+subs[page];
   if(page==='dashboard' && state.rawData.length) renderDashboard();
   if(page==='data' && state.rawData.length) renderTable();
   if(page==='chat') updateChatPanel();
+  if(page==='briefing' && state.rawData.length) renderBriefing();
+  if(page==='alertas') renderAlertas();
+  if(page==='upload' && state.rawData.length) renderPlayerCards();
 }
 
 // ─── FILE HANDLING ────────────────────────────────────────────────────────────
@@ -1154,6 +1717,7 @@ function processFile(file){
       document.getElementById('statusDot').classList.add('on');
       document.getElementById('statusText').textContent = state.rawData.length+' notícias';
       populatePlayers();
+      renderPlayerCards();
       showToast('✅',`${state.rawData.length} notícias carregadas com sucesso!`);
     } catch(err){
       showToast('❌','Erro ao ler o arquivo: '+err.message);
@@ -1257,6 +1821,11 @@ function renderDashboard(){
       <div class="stat-card-value" style="color:${pctPos>60?'var(--accent3)':'var(--accent-neg)'}">${pctPos}%</div>
       <div class="stat-card-sub">${positivos} de ${totalNoticias} notícias</div>
     </div>
+    <div class="stat-card" style="--card-glow:rgba(184,154,243,.1)">
+      <div class="stat-card-label">Media Perf. Score</div>
+      <div class="stat-card-value" style="color:#b794f4" id="dashMPS">—</div>
+      <div class="stat-card-sub" id="dashMPSLabel">Calculando...</div>
+    </div>
   `;
 
   // ── CHARTS ───────────────────────────────────────────────────────────────────
@@ -1304,6 +1873,8 @@ function renderDashboard(){
     buildRPSChart(data);
     buildTemporalChart(data);
     buildProtagonismoChart(data);
+    // NEW v6.0: render insights and winner
+    renderDashboardInsights(data);
   });
 }
 
@@ -1607,14 +2178,16 @@ function addAIMessage(result, question){
     </div>`;
   }
 
+  const actionBoxHtml = buildActionBox(question||'');
   div.innerHTML=`
     <div class="msg-bubble">
       <div>${result.text}</div>
       ${chartHtml}
       ${analysisHtml}
       ${insightsHtml}
+      ${actionBoxHtml}
     </div>
-    <div class="msg-meta">🤖 Analista IA · ${now}</div>
+    <div class="msg-meta">🤖 Analista IA · <span style="font-size:10px;padding:1px 6px;border-radius:4px;background:var(--bg3);">${state.analysisMode==='analyst'?'🔬 Analista':'👔 Exec'}</span> · ${now}</div>
   `;
   msgs.appendChild(div);
   msgs.scrollTop=msgs.scrollHeight;
@@ -1624,6 +2197,38 @@ function addAIMessage(result, question){
       new Chart(document.getElementById(chartId),result.chartData);
     });
   }
+}
+
+// ─── ACTION BOX in AI responses ─────────────────────────────────────────────
+function buildActionBox(question){
+  const q = question.toLowerCase();
+  let actions = [];
+  if(/sentimento/.test(q)) actions.push('📊 Ver dashboard','🔔 Verificar alertas');
+  if(/share.*voice|sov/.test(q)) actions.push('📈 Evolução mensal','⚔️ Comparar players');
+  if(/negat|risco|crise/.test(q)) actions.push('🛡️ Escudo de crise','🔔 Ver alertas','📋 Gerar briefing');
+  if(/porta.*voz|portavoz/.test(q)) actions.push('🎙️ Top porta-vozes positivos','📰 Veículos que citaram');
+  if(/ave|equivalen/.test(q)) actions.push('📊 Por player','📅 Evolução mensal');
+  if(/story|semana/.test(q)) actions.push('📋 Gerar briefing completo','📄 Relatório 1 minuto');
+  // default actions
+  if(actions.length === 0) actions = ['📋 Ver briefing','🔔 Ver alertas','📄 Relatório 1 min'];
+  actions = actions.slice(0,4);
+  return `<div class="action-box">
+    <div class="action-box-title">⚡ Próximas Ações</div>
+    <div class="action-box-btns">
+      ${actions.map(a=>`<button class="action-box-btn" onclick="handleActionBoxBtn('${a}')">${a}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function handleActionBoxBtn(label){
+  const l = label.toLowerCase();
+  if(l.includes('briefing') || l.includes('resumo')) { showPage('briefing'); return; }
+  if(l.includes('alerta')) { showPage('alertas'); return; }
+  if(l.includes('dashboard')) { showPage('dashboard'); return; }
+  if(l.includes('relatório') || l.includes('1 min')) { gerarRelatorio1Min(); return; }
+  // Otherwise treat as a chat question
+  const txt = label.replace(/^[^\w]+/,'').replace(/[^\w\sáéíóúâêîôûãõàèìòùçÁÉÍÓÚÂÊÎÔÛÃÕÀÈÌÒÙÇ-]+/g,'').trim();
+  if(txt){ document.getElementById('chatInput').value = txt; sendMessage(); }
 }
 
 // ─── ENVIRONMENT DETECTION ───────────────────────────────────────────────────
@@ -2849,6 +3454,548 @@ function escHtml(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+
+
+// ══════════════════════════════════════════════════════════════════
+//  MÓDULO PLAYER PRINCIPAL v6.1 — sem overrides, sem recursão
+// ══════════════════════════════════════════════════════════════════
+
+// Extende state com mainPlayer
+state.mainPlayer = null;
+
+const P_EMOJIS  = ['🏦','🏢','💼','🏬','🏛️','🌐','🏗️','🏭','🚀','💡','🌟','⚡'];
+const P_COLORS  = ['#58a6ff','#56d364','#f6ad55','#f85149','#b794f4','#68d391','#63b3ed','#fc8181','#fbd38d','#9f7aea'];
+
+// ── Retorna data filtrada pelo player principal (ou tudo) ─────────
+function getMainData(){
+  if(state.mainPlayer)
+    return state.rawData.filter(r => getVal(r,'Player') === state.mainPlayer);
+  return state.rawData;
+}
+
+// ── Renderiza os cards de player na tela de upload ────────────────
+function renderPlayerCards(){
+  const panel = document.getElementById('playerSelectPanel');
+  const grid  = document.getElementById('playerCardsGrid');
+  if(!panel || !grid) return;
+  const players = getUniqueValues('Player').filter(Boolean);
+  if(!players.length){ panel.classList.remove('show'); return; }
+  panel.classList.add('show');
+
+  grid.innerHTML = players.map((p, i) => {
+    const pd    = state.rawData.filter(r => getVal(r,'Player') === p);
+    const total = pd.length;
+    const pos   = pd.filter(r => (getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length;
+    const pctPos= total ? Math.round(pos/total*100) : 0;
+    const sov   = state.rawData.length ? Math.round(total/state.rawData.length*100) : 0;
+    const emoji = P_EMOJIS[i % P_EMOJIS.length];
+    const sentColor = pctPos>60?'#56d364':pctPos<40?'#f85149':'#f6ad55';
+    const sel   = state.mainPlayer === p;
+    return `<div class="player-card${sel?' selected':''}"
+              onclick="selecionarPlayerCard('${p.replace(/'/g,"\\'")}',this)">
+      <div class="player-card-icon">${emoji}</div>
+      <div class="player-card-name" title="${p}">${p}</div>
+      <div class="player-card-stats">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${sentColor};vertical-align:middle;margin-right:3px;"></span>${pctPos}% pos · ${sov}% SOV
+      </div>
+      <div class="player-card-stats">${total} notícias</div>
+    </div>`;
+  }).join('');
+
+  // Restaura estado do botão se já havia player selecionado
+  if(state.mainPlayer) ativarBotaoBriefing(state.mainPlayer);
+}
+
+// ── Clique em um card de player ───────────────────────────────────
+function selecionarPlayerCard(nome, el){
+  state.mainPlayer = nome;
+  document.querySelectorAll('.player-card').forEach(c => c.classList.remove('selected'));
+  if(el) el.classList.add('selected');
+  ativarBotaoBriefing(nome);
+  atualizarBadgePlayer();
+  showToast('🎯', 'Player selecionado: ' + nome);
+}
+
+function ativarBotaoBriefing(nome){
+  const btn = document.getElementById('btnGoAnalysis');
+  if(btn){ btn.disabled = false; btn.textContent = 'Abrir Briefing — ' + nome + ' →'; }
+}
+
+// ── Atualiza badge na topbar e status ─────────────────────────────
+function atualizarBadgePlayer(){
+  const badge = document.getElementById('selPlayerBadge');
+  const txt   = document.getElementById('selPlayerBadgeText');
+  if(state.mainPlayer){
+    if(badge) badge.classList.add('show');
+    if(txt)   txt.textContent = '🎯 ' + state.mainPlayer;
+    document.getElementById('statusText').textContent = state.mainPlayer + ' · principal';
+  } else {
+    if(badge) badge.classList.remove('show');
+    if(txt)   txt.textContent = '🎯 —';
+    if(state.rawData.length)
+      document.getElementById('statusText').textContent = state.rawData.length + ' notícias';
+  }
+}
+
+// ── Atualiza tag de player no Briefing ───────────────────────────
+function atualizarTagBriefing(){
+  const tag  = document.getElementById('briefingPlayerTag');
+  const nome = document.getElementById('briefingPlayerName');
+  if(!tag || !nome) return;
+  if(state.mainPlayer){
+    tag.style.display = 'inline-block';
+    nome.textContent  = state.mainPlayer;
+  } else {
+    tag.style.display = 'none';
+  }
+}
+
+// ── Atualiza tag de player nos Alertas ──────────────────────────
+function atualizarTagAlertas(){
+  const tag  = document.getElementById('alertasPlayerTag');
+  const nome = document.getElementById('alertasPlayerName');
+  if(!tag || !nome) return;
+  if(state.mainPlayer){
+    tag.style.display = 'inline-block';
+    nome.textContent  = state.mainPlayer;
+  } else {
+    tag.style.display = 'none';
+  }
+}
+
+// ── Filtra dashboard pelo player principal ────────────────────────
+function filtrarDashMainPlayer(){
+  if(!state.mainPlayer){ showToast('⚠️','Nenhum player selecionado. Vá em Importar Dados.'); return; }
+  const sel = document.getElementById('playerFilter');
+  if(sel){ sel.value = state.mainPlayer; renderDashboard(); }
+  showToast('🎯', 'Dashboard: ' + state.mainPlayer);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  SOBRESCREVE renderBriefing PARA USAR mainPlayer
+//  (versão limpa — sem wrapper recursivo)
+// ══════════════════════════════════════════════════════════════════
+function renderBriefing(){
+  // Data: filtrada se mainPlayer definido, senão tudo
+  const data = getMainData();
+
+  // Date
+  const now  = new Date();
+  const dias  = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const dateEl = document.getElementById('briefingDate');
+  if(dateEl) dateEl.textContent = `${dias[now.getDay()]}, ${now.getDate()} de ${meses[now.getMonth()]} de ${now.getFullYear()}`;
+
+  atualizarTagBriefing();
+
+  if(!state.rawData.length){
+    const hl = document.getElementById('briefingHeadline');
+    if(hl) hl.innerHTML = '🌅 Importe uma planilha para gerar seu <em>Briefing Diário</em>';
+    return;
+  }
+
+  const bc = _gerarBriefingContent(data);
+  if(!bc) return;
+
+  // Headline
+  const hl = document.getElementById('briefingHeadline');
+  const sl = document.getElementById('briefingSubLine');
+  if(hl) hl.innerHTML = bc.headline;
+  if(sl) sl.textContent = bc.subLine;
+
+  // MPS
+  const mps = _calcularMPS(data);
+  const scoreEl = document.getElementById('mpsScore');
+  const labelEl = document.getElementById('mpsLabel');
+  const descEl  = document.getElementById('mpsDesc');
+  const fillEl  = document.getElementById('mpsGaugeFill');
+  if(scoreEl){ scoreEl.textContent = mps.score; scoreEl.style.color = mps.color; }
+  if(labelEl){ labelEl.textContent = mps.label; labelEl.style.background = mps.color+'20'; labelEl.style.color = mps.color; }
+  if(descEl)  descEl.textContent = mps.desc;
+  if(fillEl){
+    const circ = 226.2;
+    fillEl.style.strokeDashoffset = circ - (circ * mps.score / 100);
+    fillEl.style.stroke = mps.color;
+  }
+
+  // Thermometer
+  const thermoFill   = document.getElementById('thermoFill');
+  const thermoBulb   = document.getElementById('thermoBulb');
+  const thermoLabels = document.getElementById('thermoLabels');
+  if(thermoFill){
+    const tc = bc.pctPos>60?'#56d364':bc.pctNeg>35?'#f85149':'#f6ad55';
+    thermoFill.style.height     = Math.min(100,bc.pctPos)+'%';
+    thermoFill.style.background = tc;
+    if(thermoBulb) thermoBulb.style.background = tc+'30';
+  }
+  if(thermoLabels){
+    const neu = 100 - bc.pctPos - bc.pctNeg;
+    thermoLabels.innerHTML = `
+      <div class="thermo-row"><span class="thermo-row-label">😊 Positivo</span><span class="thermo-row-val" style="color:#56d364">${bc.pctPos}%</span></div>
+      <div class="thermo-row"><span class="thermo-row-label">😐 Neutro</span><span class="thermo-row-val" style="color:#58a6ff">${Math.max(0,neu)}%</span></div>
+      <div class="thermo-row"><span class="thermo-row-label">😠 Negativo</span><span class="thermo-row-val" style="color:#f85149">${bc.pctNeg}%</span></div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+        <div style="font-size:11px;color:var(--text3);">Total analisado</div>
+        <div style="font-weight:700;font-size:18px;">${data.length}</div>
+      </div>`;
+  }
+
+  // Podium — sempre com todos os players para comparação
+  const podiumWrap = document.getElementById('podiumWrap');
+  if(podiumWrap){
+    const allPlayers = getUniqueValues('Player');
+    const allTotal   = state.rawData.length;
+    const ranking = allPlayers
+      .map(p => ({ p, n: state.rawData.filter(r=>getVal(r,'Player')===p).length }))
+      .sort((a,b)=>b.n-a.n).slice(0,3);
+    const crowns = ['🥇','🥈','🥉'];
+    const barColors = ['#f6ad55','#a0aec0','#cd7f32'];
+    const order   = ranking.length>=3 ? [ranking[1],ranking[0],ranking[2]] : ranking;
+    const heights = ranking.length>=3 ? [60,85,45] : [85,60];
+    const bColors = ranking.length>=3 ? [barColors[1],barColors[0],barColors[2]] : barColors;
+    const bCrowns = ranking.length>=3 ? [crowns[1],crowns[0],crowns[2]] : crowns;
+    podiumWrap.innerHTML = `<div class="podium-wrap">
+      ${order.map((item,i)=>{
+        const sov = allTotal ? Math.round(item.n/allTotal*100) : 0;
+        const highlight = state.mainPlayer && item.p===state.mainPlayer ? 'box-shadow:0 0 0 2px var(--accent);border-radius:4px 4px 0 0;' : '';
+        return `<div class="podium-item">
+          <div style="font-size:14px;">${bCrowns[i]}</div>
+          <div class="podium-pct" style="${state.mainPlayer===item.p?'color:var(--accent);':''}">${sov}%</div>
+          <div class="podium-bar" style="height:${heights[i]}px;background:${bColors[i]};${highlight}"></div>
+          <div class="podium-name" title="${item.p}" style="${state.mainPlayer===item.p?'color:var(--text);font-weight:600;':''}">${item.p}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  // 5 Cards
+  document.getElementById('bcResumo').innerHTML       = bc.resumo;
+  document.getElementById('bcInsight').innerHTML      = bc.insight;
+  document.getElementById('bcRisco').innerHTML        = bc.risco;
+  document.getElementById('bcOportunidade').innerHTML = bc.oportunidade;
+  document.getElementById('bcRecomendacao').innerHTML = bc.recomendacao;
+
+  // Escudo de crise
+  const shieldIcon   = document.getElementById('shieldIcon');
+  const shieldStatus = document.getElementById('shieldStatus');
+  const shieldDesc   = document.getElementById('shieldDesc');
+  const shieldPct    = document.getElementById('shieldPct');
+  if(shieldStatus){
+    if(bc.pctNeg>35){
+      shieldIcon.textContent='🔴'; shieldStatus.textContent='⚠️ CRISE DETECTADA'; shieldStatus.style.color='#f85149';
+      shieldDesc.textContent=`Negatividade em ${bc.pctNeg}% — acima do limiar crítico de 35%. Ative o plano de gestão de crise.`;
+    } else if(bc.pctNeg>20){
+      shieldIcon.textContent='🟡'; shieldStatus.textContent='⚡ Atenção Elevada'; shieldStatus.style.color='#f6ad55';
+      shieldDesc.textContent=`Negatividade em ${bc.pctNeg}% — no limiar de alerta (20-35%). Prepare argumentários preventivos.`;
+    } else {
+      shieldIcon.textContent='🟢'; shieldStatus.textContent='✅ Ambiente Seguro'; shieldStatus.style.color='#56d364';
+      shieldDesc.textContent=`Negatividade sob controle (${bc.pctNeg}%). Mantenha a estratégia de pauta positiva.`;
+    }
+    if(shieldPct){ shieldPct.textContent=bc.pctNeg+'%'; shieldPct.style.color=bc.pctNeg>35?'#f85149':bc.pctNeg>20?'#f6ad55':'#56d364'; }
+  }
+
+  // Dashboard MPS sync
+  const dashMPS = document.getElementById('dashMPS');
+  const dashLbl = document.getElementById('dashMPSLabel');
+  if(dashMPS){ dashMPS.textContent=mps.score; dashMPS.style.color=mps.color; }
+  if(dashLbl)  dashLbl.textContent=mps.label;
+}
+
+// ── Gera conteúdo do briefing (dados já filtrados recebidos) ──────
+function _gerarBriefingContent(data){
+  if(!data || !data.length) return null;
+  const total   = data.length;
+  const allPlayers = getUniqueValues('Player');
+  const pos     = data.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length;
+  const neg     = data.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('neg')).length;
+  const pctPos  = Math.round(pos/total*100);
+  const pctNeg  = Math.round(neg/total*100);
+  const aveTotal= data.map(r=>getNumVal(r,'EquivalenciaPublicitaria')||getNumVal(r,'AVE')).reduce((a,b)=>a+b,0);
+  const rpsTotal= data.map(r=>getNumVal(r,'RPS')).reduce((a,b)=>a+b,0);
+
+  // SOV no contexto geral (para o pódio)
+  const totalAll = state.rawData.length;
+  const sovPct   = state.mainPlayer && totalAll ? Math.round(total/totalAll*100) : null;
+
+  // Temas
+  const temasMap={};
+  data.forEach(r=>{const t=getVal(r,'Temas')||getVal(r,'Tema'); if(t) temasMap[t]=(temasMap[t]||0)+1;});
+  const topTemas=Object.entries(temasMap).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([t])=>t);
+
+  const negData=data.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('neg'));
+  const negTemas={};
+  negData.forEach(r=>{const t=getVal(r,'Temas')||getVal(r,'Tema'); if(t) negTemas[t]=(negTemas[t]||0)+1;});
+  const topNeg=Object.entries(negTemas).sort((a,b)=>b[1]-a[1])[0];
+
+  // Variação mensal
+  const monthly={};
+  data.forEach(r=>{const dt=parseDate(r);if(!dt)return;const k=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;monthly[k]=(monthly[k]||0)+1;});
+  const months=Object.keys(monthly).sort();
+  const lastCount=months.length?monthly[months[months.length-1]]:0;
+  const prevCount=months.length>1?monthly[months[months.length-2]]:0;
+  const varPct=prevCount>0?Math.round((lastCount-prevCount)/prevCount*100):0;
+
+  // Porta-voz destaque
+  const pvMap={};
+  data.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).forEach(r=>{
+    const pv=getVal(r,'Porta_Voz')||getVal(r,'PortaVoz')||getVal(r,'Porta-Voz'); if(pv&&pv.length>2) pvMap[pv]=(pvMap[pv]||0)+1;
+  });
+  const topPV=Object.entries(pvMap).sort((a,b)=>b[1]-a[1])[0];
+
+  // Concorrente mais próximo (se tiver player selecionado)
+  let compInfo = '';
+  if(state.mainPlayer && allPlayers.length>1){
+    const others = allPlayers.filter(p=>p!==state.mainPlayer)
+      .map(p=>({p, n:state.rawData.filter(r=>getVal(r,'Player')===p).length}))
+      .sort((a,b)=>b.n-a.n).slice(0,2);
+    compInfo = ' Concorrentes: ' + others.map(o=>`${o.p} (${totalAll?Math.round(o.n/totalAll*100):0}% SOV)`).join(', ') + '.';
+  }
+
+  const nm = state.mainPlayer || 'Sua marca';
+  const headEm = pctPos>60?'em alta':pctNeg>35?'sob pressão':'estável';
+  const headCls = pctNeg>35?' class="risco-em"':'';
+  const sovStr  = sovPct!==null ? ` · SOV ${sovPct}%` : '';
+
+  return {
+    pctPos, pctNeg,
+    headline: `${state.mainPlayer?'🎯 <strong>'+state.mainPlayer+'</strong> está':'🌅 Sua marca está'} <em${headCls}>${headEm}</em> na mídia`,
+    subLine: `${total} publicações${sovStr} · ${pctPos}% positivo · AVE: ${formatBRL(aveTotal)}`,
+    resumo: `<strong>${total}</strong> notícias analisadas, <strong style="color:${pctPos>60?'#56d364':'var(--text)'}">${pctPos}% de sentimento positivo</strong>. AVE total: <strong>${formatBRL(aveTotal)}</strong>. RPS: <strong>${rpsTotal.toFixed(0)}</strong>.${compInfo}`,
+    insight: varPct>=10
+      ? `Volume <strong style="color:#56d364">cresceu ${varPct}%</strong> no último período. Temas em destaque: <strong>${topTemas.slice(0,2).join(', ')||'—'}</strong>.${topPV?` Porta-voz <strong>${topPV[0]}</strong> em ${topPV[1]} artigos positivos.`:''}`
+      : varPct<=-10
+        ? `Volume <strong style="color:#f85149">caiu ${Math.abs(varPct)}%</strong> — considere intensificar a geração de pauta.`
+        : `Volume estável. Temas principais: <strong>${topTemas.slice(0,2).join(', ')||'—'}</strong>.${topPV?` Porta-voz destaque: <strong>${topPV[0]}</strong>.`:''}`,
+    risco: pctNeg>35
+      ? `<strong style="color:#f85149">Alto volume negativo: ${pctNeg}%</strong>.${topNeg?` Tema crítico: <strong>${topNeg[0]}</strong> (${topNeg[1]} ocorrências).`:''} Plano de crise recomendado.`
+      : pctNeg>20
+        ? `Negatividade em <strong>${pctNeg}%</strong> merece atenção.${topNeg?` Tema sensível: <strong>${topNeg[0]}</strong>.`:''} Prepare argumentários preventivos.`
+        : `Nível de negatividade <strong style="color:#56d364">sob controle</strong> (${pctNeg}%). Continue monitorando narrativas em Tier 1.`,
+    oportunidade: pctPos>60
+      ? `<strong style="color:#56d364">Alta aceitação positiva (${pctPos}%)</strong>. Amplifique nas narrativas de sucesso em canais próprios e redes sociais.`
+      : `Capitalize os ${pos} artigos positivos como material de content marketing.${topTemas.length?` Tema "<strong>${topTemas[0]}</strong>" tem potencial para viralizar.`:''}`,
+    recomendacao: pctNeg>35
+      ? `🚨 <strong>Plano de gestão de crise:</strong> revisar narrativas negativas, preparar porta-vozes e intensificar pauta positiva nos próximos 15 dias.`
+      : varPct<=-10
+        ? `📣 <strong>Intensificar geração de pauta:</strong> volume caiu ${Math.abs(varPct)}%. Programe releases, exclusivos e entrevistas.`
+        : `✅ <strong>Capitalizar o momento:</strong> distribua os melhores artigos para stakeholders e planeje pauta proativa para manter o volume.`
+  };
+}
+
+// ── Calcula MPS sobre dados já filtrados ──────────────────────────
+function _calcularMPS(data){
+  if(!data||!data.length) return {score:0,label:'Sem dados',color:'#8b949e',desc:'Importe dados para calcular.'};
+  const total=data.length;
+  const pos=data.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length;
+  const sentScore=pos/total*100;
+  const rpsAlc=data.map(r=>getNumVal(r,'RPS')).reduce((a,b)=>a+b,0);
+  const rpsPot=data.map(r=>getNumVal(r,'RPS Potencial')).reduce((a,b)=>a+b,0);
+  const rpsScore=rpsPot>0?Math.min(100,rpsAlc/rpsPot*100):50;
+  const tier1=data.filter(r=>{const t=(getVal(r,'ClassificacaoVeiculo')||getVal(r,'Relevancia')||getVal(r,'Relevância')||'').toLowerCase();return t.includes('1')||t.includes('alta');}).length;
+  const tierScore=tier1/total*100;
+  // SOV score: participação no total geral
+  const sovScore = state.mainPlayer&&state.rawData.length ? Math.min(100,(total/state.rawData.length)*200) : 50;
+  const score=Math.max(0,Math.min(100,Math.round(sentScore*0.4+sovScore*0.2+rpsScore*0.2+tierScore*0.2)));
+  let label,color,desc;
+  if(score>=80){label='Excelente 🌟';color='#56d364';desc='Performance excepcional. Continue a estratégia.';}
+  else if(score>=65){label='Bom 👍';color='#58a6ff';desc='Boa performance. Potencial de crescimento identificado.';}
+  else if(score>=50){label='Regular ⚡';color='#f6ad55';desc='Performance moderada. Há oportunidades de melhoria.';}
+  else if(score>=35){label='Atenção ⚠️';color='#f6ad55';desc='Abaixo do esperado. Ações corretivas recomendadas.';}
+  else{label='Crítico 🚨';color='#f85149';desc='Performance crítica. Plano de ação imediato necessário.';}
+  return {score,label,color,desc};
+}
+
+// ── Detecta alertas (dados filtrados pelo mainPlayer) ─────────────
+function detectAlerts(data){
+  // Trabalha com os dados do player principal (ou todos)
+  const focused = getMainData();
+  if(!focused.length) return [{type:'success',icon:'✅',title:'Nenhum dado carregado',desc:'Importe uma planilha para ativar o monitoramento.',badge:'INFO',badgeType:'info',action:'Importar dados',actionFn:"showPage('upload')"}];
+
+  const totalFocused = focused.length;
+  const totalAll     = state.rawData.length;
+  const alerts = [];
+  const players = getUniqueValues('Player');
+
+  // 1. Pico de Negativo
+  const neg    = focused.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('neg')).length;
+  const pctNeg = Math.round(neg/totalFocused*100);
+  if(pctNeg>35){
+    const negTemas={};
+    focused.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('neg')).forEach(r=>{const t=getVal(r,'Temas')||getVal(r,'Tema');if(t)negTemas[t]=(negTemas[t]||0)+1;});
+    const topNeg=Object.entries(negTemas).sort((a,b)=>b[1]-a[1])[0];
+    alerts.push({type:'critical',icon:'🔴',title:'Pico de Negatividade Detectado',
+      desc:`${pctNeg}% de negatividade — acima do limiar crítico (35%).${topNeg?` Tema crítico: <strong>${topNeg[0]}</strong> (${topNeg[1]} ocorrências).`:''}`,
+      badge:'CRÍTICO',badgeType:'critical',action:'Analisar negatividade',actionFn:"sendChatQ('Quais são os temas negativos e como podemos respondê-los?')"});
+  } else if(pctNeg>20){
+    alerts.push({type:'warning',icon:'🟡',title:'Atenção: Negatividade em Alta',
+      desc:`${pctNeg}% de negatividade — acima da zona de atenção (20%). Prepare argumentários preventivos.`,
+      badge:'ATENÇÃO',badgeType:'warning',action:'Ver temas negativos',actionFn:"sendChatQ('Quais são os temas negativos do período?')"});
+  }
+
+  // 2. Concorrente lidera SOV (só quando há mainPlayer)
+  if(state.mainPlayer && players.length>1){
+    const mainN    = totalFocused;
+    const mainSOV  = totalAll?Math.round(mainN/totalAll*100):0;
+    const others   = players.filter(p=>p!==state.mainPlayer)
+      .map(p=>({p,n:state.rawData.filter(r=>getVal(r,'Player')===p).length}))
+      .sort((a,b)=>b.n-a.n);
+    const rival    = others[0];
+    const rivalSOV = totalAll?Math.round(rival.n/totalAll*100):0;
+    if(rival.n > mainN){
+      alerts.push({type:'critical',icon:'⚔️',title:`${rival.p} supera ${state.mainPlayer} em Share of Voice`,
+        desc:`<strong>${rival.p}</strong> tem ${rivalSOV}% vs. ${mainSOV}% de <strong>${state.mainPlayer}</strong> — gap de ${rivalSOV-mainSOV} pp.`,
+        badge:'CONCORRENTE LÍDER',badgeType:'critical',action:`Comparar players`,
+        actionFn:`sendChatQ('Compare ${state.mainPlayer} e ${rival.p} em share of voice e sentimento')`});
+    } else if(rivalSOV >= mainSOV-5){
+      alerts.push({type:'warning',icon:'⚡',title:`${rival.p} se aproxima de ${state.mainPlayer} no SOV`,
+        desc:`Diferença de apenas <strong>${mainSOV-rivalSOV} pp</strong> entre ${state.mainPlayer} (${mainSOV}%) e ${rival.p} (${rivalSOV}%).`,
+        badge:'ATENÇÃO',badgeType:'warning',action:'Ver comparativo',
+        actionFn:`sendChatQ('Compare ${state.mainPlayer} e ${rival.p} nos últimos meses')`});
+    }
+  }
+
+  // 3. Nova narrativa no último mês
+  const monthly={};
+  focused.forEach(r=>{const dt=parseDate(r);if(!dt)return;const k=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;monthly[k]=(monthly[k]||0)+1;});
+  const months=Object.keys(monthly).sort();
+  if(months.length>=2){
+    const lastM  = months[months.length-1];
+    const prevM  = months[months.length-2];
+    const lastD  = focused.filter(r=>{const dt=parseDate(r);return dt&&`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`===lastM;});
+    const prevD  = focused.filter(r=>{const dt=parseDate(r);return dt&&`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`===prevM;});
+    const lastSet= new Set(lastD.map(r=>getVal(r,'Temas')||getVal(r,'Tema')).filter(Boolean));
+    const prevSet= new Set(prevD.map(r=>getVal(r,'Temas')||getVal(r,'Tema')).filter(Boolean));
+    const novosTemas=[...lastSet].filter(t=>!prevSet.has(t)).slice(0,3);
+    if(novosTemas.length)
+      alerts.push({type:'info',icon:'📰',title:'Nova Narrativa Detectada em '+lastM,
+        desc:`${novosTemas.length} tema${novosTemas.length>1?'s novos apareceram':' novo apareceu'}: <strong>${novosTemas.join(', ')}</strong>. Avalie e prepare resposta narrativa.`,
+        badge:'NOVO',badgeType:'info',action:'Explorar tema',
+        actionFn:`sendChatQ('Quais as notícias sobre ${novosTemas[0]}?')`});
+
+    const varPct=prevD.length?Math.round((lastD.length-prevD.length)/prevD.length*100):0;
+    if(Math.abs(varPct)>=20)
+      alerts.push({type:varPct>0?'success':'warning',icon:varPct>0?'📈':'📉',
+        title:varPct>0?`Volume cresceu ${varPct}% no último mês`:`Volume caiu ${Math.abs(varPct)}% no último mês`,
+        desc:varPct>0?`Aumento de ${prevD.length} para ${lastD.length} notícias. Identifique os gatilhos para replicar.`:`Queda de ${Math.abs(varPct)}%. Intensifique a geração de pauta proativa.`,
+        badge:varPct>0?'CRESCIMENTO':'QUEDA',badgeType:varPct>0?'success':'warning',
+        action:'Ver evolução',actionFn:"sendChatQ('Qual a evolução mensal do volume de publicações?')"});
+  }
+
+  // 4. Porta-voz destaque positivo
+  const pvMap={};
+  focused.filter(r=>(getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).forEach(r=>{
+    const pv=getVal(r,'Porta_Voz')||getVal(r,'PortaVoz')||getVal(r,'Porta-Voz'); if(pv&&pv.length>2)pvMap[pv]=(pvMap[pv]||0)+1;
+  });
+  const topPV=Object.entries(pvMap).sort((a,b)=>b[1]-a[1])[0];
+  if(topPV&&topPV[1]>=3)
+    alerts.push({type:'success',icon:'🌟',title:`Porta-voz de Alto Impacto: ${topPV[0]}`,
+      desc:`<strong>${topPV[0]}</strong> aparece em <strong>${topPV[1]}</strong> publicações positivas. Amplifique a presença deste porta-voz.`,
+      badge:'OPORTUNIDADE',badgeType:'success',action:'Analisar porta-voz',
+      actionFn:`sendChatQ('Análise completa do porta-voz ${topPV[0]}')`});
+
+  if(!alerts.length)
+    alerts.push({type:'success',icon:'✅',title:'Ambiente Monitorado — Sem Alertas Críticos',
+      desc:'Nenhum alerta crítico identificado. Continue o monitoramento preventivo.',
+      badge:'NORMAL',badgeType:'success',action:'Ver briefing',actionFn:"showPage('briefing')"});
+
+  return alerts;
+}
+
+// ── renderAlertas já usa detectAlerts() atualizado ────────────────
+function renderAlertas(){
+  atualizarTagAlertas();
+  const alertas = detectAlerts(state.rawData);
+  state.alertas = alertas;
+  const criticals = alertas.filter(a=>a.type==='critical'||a.type==='warning').length;
+  const countEl = document.getElementById('alertaCount');
+  if(countEl){ countEl.textContent=criticals; countEl.style.display=criticals>0?'inline-flex':'none'; }
+  const container = document.getElementById('alertasList');
+  if(!container) return;
+  if(!state.rawData.length){
+    container.innerHTML='<div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-title">Nenhum dado carregado</div><div class="empty-sub">Importe uma planilha para ativar o monitoramento.</div></div>';
+    return;
+  }
+  container.innerHTML = alertas.map(a=>`
+    <div class="alerta-card alerta-${a.type}">
+      <div class="alerta-icon">${a.icon}</div>
+      <div class="alerta-body">
+        <div class="alerta-title">${a.title}</div>
+        <div class="alerta-desc">${a.desc}</div>
+        <div class="alerta-meta">
+          <span class="alerta-badge badge-${a.badgeType}">${a.badge}</span>
+          <button class="alerta-action-btn" onclick="${a.actionFn}">${a.action} →</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── gerarRelatorio1Min ─────────────────────────────────────────────
+function gerarRelatorio1Min(){
+  if(!state.rawData.length){ showToast('⚠️','Importe dados primeiro.'); return; }
+  const data  = getMainData();
+  const bc    = _gerarBriefingContent(data);
+  const mps   = _calcularMPS(data);
+  if(!bc) return;
+  const date = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  const playerInfo = state.mainPlayer ? ` · ${state.mainPlayer}` : '';
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório 1 Minuto — Media Intelligence</title>
+<style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Helvetica Neue',Arial,sans-serif;background:#fff;color:#1a1a2e;padding:32px;max-width:800px;margin:0 auto;}
+h1{font-size:22px;font-weight:700;margin-bottom:4px;}
+.sub{font-size:13px;color:#888;margin-bottom:20px;}
+.mps{display:inline-block;padding:4px 14px;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:20px;background:${mps.color}20;color:${mps.color};border:1px solid ${mps.color}40;}
+.card{border:1px solid #e8e8e8;border-radius:8px;padding:16px 18px;margin-bottom:12px;}
+.lbl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#888;font-weight:600;margin-bottom:6px;}
+.txt{font-size:13px;line-height:1.6;color:#333;}
+.risco{border-left:3px solid #e53e3e;}.opo{border-left:3px solid #38a169;}.rec{border-left:3px solid #3182ce;}
+.footer{margin-top:28px;font-size:11px;color:#aaa;border-top:1px solid #eee;padding-top:12px;}</style>
+</head><body>
+<h1>📊 Relatório de 1 Minuto${playerInfo}</h1>
+<div class="sub">Media Intelligence v6.0 · ${date}</div>
+<div class="mps">MPS: ${mps.score}/100 — ${mps.label}</div>
+<div class="card"><div class="lbl">📋 Resumo Executivo</div><div class="txt">${bc.resumo}</div></div>
+<div class="card"><div class="lbl">💡 Principal Insight</div><div class="txt">${bc.insight}</div></div>
+<div class="card risco"><div class="lbl">⚠️ Risco Detectado</div><div class="txt">${bc.risco}</div></div>
+<div class="card opo"><div class="lbl">🚀 Oportunidade</div><div class="txt">${bc.oportunidade}</div></div>
+<div class="card rec"><div class="lbl">✅ Recomendação Acionável</div><div class="txt">${bc.recomendacao}</div></div>
+<div class="footer">Gerado pelo APP Media Intelligence v6.0 · ${date}</div>
+</body></html>`;
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`relatorio-mi-${Date.now()}.html`; a.click(); URL.revokeObjectURL(url);
+  showToast('📄','Relatório de 1 Minuto gerado!');
+}
+
+// ── sendChatQ helper (usado nos alertas) ──────────────────────────
+function sendChatQ(q){
+  showPage('chat');
+  setTimeout(()=>{ document.getElementById('chatInput').value=q; sendMessage(); }, 200);
+}
+
+// ── qaAction helper (botões do briefing) ─────────────────────────
+function qaAction(action){
+  const map={mencoes:'Quem falou da minha marca?',criticas:'Quais são os principais temas negativos?',sov:'Qual o share of voice de cada player?',portatvozes:'Quais porta-vozes geram mais cobertura positiva?',temas:'Quais são os top temas de cobertura?'};
+  if(action==='alertas'){ showPage('alertas'); return; }
+  if(action==='relatorio'){ gerarRelatorio1Min(); return; }
+  if(action==='story'){ sendChatQ('Crie um storytelling semanal da evolução de imagem da marca na mídia'); return; }
+  if(map[action]){ sendChatQ(map[action]); }
+}
+
+function goChat(btn){
+  const q=btn.textContent.trim();
+  showPage('chat');
+  setTimeout(()=>{ document.getElementById('chatInput').value=q; sendMessage(); },150);
+}
+
+// ── Init Briefing Date ────────────────────────────────────────────
+setTimeout(()=>{
+  const now=new Date();
+  const dias=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const el=document.getElementById('briefingDate');
+  if(el) el.textContent=`${dias[now.getDay()]}, ${now.getDate()} de ${meses[now.getMonth()]} de ${now.getFullYear()}`;
+},100);
+
 // Initialize Lucide icons after DOM is ready
 function initLucideIcons() {
   if (typeof lucide !== 'undefined') {
@@ -2865,6 +4012,14 @@ function initLucideIcons() {
 
 // Init LLM default
 selectLlm('claude','🟠','Claude Sonnet');
+// Init briefing date on load
+setTimeout(()=>{
+  const now = new Date();
+  const dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const el = document.getElementById('briefingDate');
+  if(el) el.textContent = `${dias[now.getDay()]}, ${now.getDate()} de ${meses[now.getMonth()]} de ${now.getFullYear()}`;
+}, 200);
 // Init environment badge
 initEnvBadge();
 // Init theme (restore saved preference)
