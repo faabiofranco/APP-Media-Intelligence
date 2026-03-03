@@ -1737,6 +1737,24 @@ function goToAnalysis(){
   showPage('dashboard');
 }
 
+// Chamado pelo botão "Abrir Briefing do Player →"
+function confirmarPlayer(){
+  if(!state.rawData.length){ showToast('⚠️','Importe uma planilha primeiro.'); return; }
+  if(!state.mainPlayer){ showToast('⚠️','Selecione um player nos cards acima.'); return; }
+  renderBriefing();
+  renderAlertas();
+  showPage('briefing');
+}
+
+// Chamado pelo botão "Ver todos os players →"
+function openAllPlayers(){
+  state.mainPlayer = null;
+  atualizarBadgePlayer();
+  renderBriefing();
+  renderAlertas();
+  showPage('dashboard');
+}
+
 // ─── PLAYER POPULATION ───────────────────────────────────────────────────────
 function populatePlayers(){
   const players = getUniqueValues('Player').filter(Boolean);
@@ -3709,6 +3727,9 @@ function renderBriefing(){
     if(shieldPct){ shieldPct.textContent=bc.pctNeg+'%'; shieldPct.style.color=bc.pctNeg>35?'#f85149':bc.pctNeg>20?'#f6ad55':'#56d364'; }
   }
 
+  // Painel Analista (mostra se modo ativo)
+  renderAnalystPanel();
+
   // Dashboard MPS sync
   const dashMPS = document.getElementById('dashMPS');
   const dashLbl = document.getElementById('dashMPSLabel');
@@ -4042,6 +4063,196 @@ function _repairJson(str){
   while(stack.length) s += stack.pop();
 
   return s;
+}
+
+
+// ══════════════════════════════════════════════════════════════════
+//  MODOS: EXECUTIVO vs ANALISTA
+// ══════════════════════════════════════════════════════════════════
+
+/*
+  👔 MODO EXECUTIVO  — para CEOs, diretores e gestores de comunicação
+     • Briefing: mostra apenas Resumo, Insight, Risco, Oportunidade, Recomendação
+     • Linguagem: simples, direta, sem jargão técnico
+     • Chat: respostas curtas e acionáveis com foco em decisão
+     • Prompt LLM: instrução de máximo 3 parágrafos, sem tabelas de números
+
+  🔬 MODO ANALISTA   — para analistas de comunicação e assessoria de imprensa
+     • Briefing: adiciona painel de métricas detalhadas (RPS, AVE, Tier 1, Protagonismo, 
+                 variação mensal, distribuição de mídia)
+     • Linguagem: técnica, com números, percentuais e cruzamentos
+     • Chat: respostas completas com dados brutos, tabelas e comparativos
+     • Prompt LLM: instrução de resposta detalhada com métricas e metodologia
+*/
+
+state.analysisMode = 'exec';  // default
+
+function setMode(m) {
+  state.analysisMode = m;
+
+  // Toggle visual dos botões no Briefing
+  const bExec    = document.getElementById('modeExec');
+  const bAnalyst = document.getElementById('modeAnalyst');
+  if(bExec)    bExec.classList.toggle('active', m === 'exec');
+  if(bAnalyst) bAnalyst.classList.toggle('active', m === 'analyst');
+
+  // Toggle visual dos botões no Chat (mantém sincronizado)
+  const cExec    = document.getElementById('chatModeExec');
+  const cAnalyst = document.getElementById('chatModeAnalyst');
+  if(cExec)    cExec.classList.toggle('active', m === 'exec');
+  if(cAnalyst) cAnalyst.classList.toggle('active', m === 'analyst');
+
+  // Mostra/esconde painel de métricas do Analista no Briefing
+  renderAnalystPanel();
+
+  showToast(m === 'exec' ? '👔' : '🔬',
+            m === 'exec' ? 'Modo Executivo — resumo e ações' : 'Modo Analista — métricas detalhadas');
+}
+
+function setChatMode(m) {
+  setMode(m);  // sincroniza tudo
+}
+
+// ── Renderiza painel extra de métricas (só no modo Analista) ──────
+function renderAnalystPanel() {
+  // Remove painel anterior se existir
+  const old = document.getElementById('analystMetricsPanel');
+  if(old) old.remove();
+
+  if(state.analysisMode !== 'analyst' || !state.rawData.length) return;
+
+  const data = getMainData();
+  if(!data.length) return;
+
+  const total    = data.length;
+  const players  = getUniqueValues('Player');
+  const totalAll = state.rawData.length;
+
+  // ── Métricas por player
+  const playerRows = players.map(p => {
+    const pd      = state.rawData.filter(r => getVal(r,'Player') === p);
+    const pos     = pd.filter(r => (getVal(r,'Sentimento')||'').toLowerCase().includes('pos')).length;
+    const neg     = pd.filter(r => (getVal(r,'Sentimento')||'').toLowerCase().includes('neg')).length;
+    const prot    = pd.filter(r => (getVal(r,'Protagonismo')||'').toLowerCase().includes('sim')).length;
+    const rps     = pd.map(r => getNumVal(r,'RPS')).reduce((a,b)=>a+b,0);
+    const ave     = pd.map(r => getNumVal(r,'EquivalenciaPublicitaria')||getNumVal(r,'AVE')).reduce((a,b)=>a+b,0);
+    const tier1   = pd.filter(r => { const t=(getVal(r,'ClassificacaoVeiculo')||getVal(r,'Relevancia')||'').toLowerCase(); return t.includes('1')||t.includes('alta'); }).length;
+    const sov     = totalAll ? Math.round(pd.length/totalAll*100) : 0;
+    const pctPos  = pd.length ? Math.round(pos/pd.length*100) : 0;
+    const pctNeg  = pd.length ? Math.round(neg/pd.length*100) : 0;
+    const isMain  = state.mainPlayer === p;
+    return `<tr style="${isMain?'background:rgba(88,166,255,.06);font-weight:600;':''}">
+      <td style="padding:8px 12px;border-top:1px solid var(--border);white-space:nowrap;">
+        ${isMain?'🎯 ':''}${p}
+      </td>
+      <td style="padding:8px 12px;border-top:1px solid var(--border);text-align:center;">${pd.length}</td>
+      <td style="padding:8px 12px;border-top:1px solid var(--border);text-align:center;font-weight:600;">${sov}%</td>
+      <td style="padding:8px 12px;border-top:1px solid var(--border);text-align:center;color:${pctPos>60?'#56d364':pctPos<40?'#f85149':'#f6ad55'}">${pctPos}%</td>
+      <td style="padding:8px 12px;border-top:1px solid var(--border);text-align:center;color:${pctNeg>30?'#f85149':'var(--text2)'}">${pctNeg}%</td>
+      <td style="padding:8px 12px;border-top:1px solid var(--border);text-align:center;">${prot}</td>
+      <td style="padding:8px 12px;border-top:1px solid var(--border);text-align:center;">${tier1}</td>
+      <td style="padding:8px 12px;border-top:1px solid var(--border);text-align:center;">${rps.toFixed(0)}</td>
+      <td style="padding:8px 12px;border-top:1px solid var(--border);text-align:center;">${formatBRL(ave)}</td>
+    </tr>`;
+  }).join('');
+
+  // ── Distribuição mensal
+  const monthly = {};
+  data.forEach(r => { const dt=parseDate(r); if(!dt)return; const k=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`; monthly[k]=(monthly[k]||0)+1; });
+  const months = Object.keys(monthly).sort();
+  const monthlyHtml = months.slice(-6).map(k => {
+    const n = monthly[k]; const max = Math.max(...Object.values(monthly));
+    const pct = Math.round(n/max*100);
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;">
+      <span style="width:52px;color:var(--text3);">${k.slice(5)==='' ? k : k.replace(/^\d{4}-/,'')}</span>
+      <div style="flex:1;background:var(--bg4);border-radius:3px;height:8px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:var(--accent);border-radius:3px;transition:width .5s;"></div>
+      </div>
+      <span style="width:28px;text-align:right;color:var(--text2);">${n}</span>
+    </div>`;
+  }).join('');
+
+  // ── Distribuição de mídia
+  const midias = {};
+  data.forEach(r => { const m=getVal(r,'Midia')||getVal(r,'Mídia')||'Outro'; midias[m]=(midias[m]||0)+1; });
+  const midiaHtml = Object.entries(midias).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([m,n]) => {
+    const pct = Math.round(n/total*100);
+    return `<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);">
+      <span style="color:var(--text2);">${m}</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:60px;background:var(--bg4);border-radius:3px;height:6px;">
+          <div style="width:${pct}%;height:100%;background:var(--accent2);border-radius:3px;"></div>
+        </div>
+        <span style="color:var(--text);font-weight:500;width:30px;text-align:right;">${pct}%</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // ── Temas mais frequentes
+  const temasMap = {};
+  data.forEach(r => { const t=getVal(r,'Temas')||getVal(r,'Tema'); if(t) temasMap[t]=(temasMap[t]||0)+1; });
+  const topTemas = Object.entries(temasMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const temasHtml = topTemas.map(([t,n]) => {
+    const pct = Math.round(n/total*100);
+    return `<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border);">
+      <span style="color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;" title="${t}">${t}</span>
+      <span style="color:var(--text);font-weight:500;white-space:nowrap;margin-left:8px;">${n} <span style="color:var(--text3);font-weight:400;">(${pct}%)</span></span>
+    </div>`;
+  }).join('');
+
+  // Monta o painel
+  const panel = document.createElement('div');
+  panel.id = 'analystMetricsPanel';
+  panel.style.cssText = 'margin-bottom:24px;animation:fadeUp .3s ease;';
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+      <div style="width:3px;height:16px;background:var(--accent);border-radius:2px;"></div>
+      <span style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;">🔬 Métricas Detalhadas — Modo Analista</span>
+    </div>
+
+    <!-- Tabela comparativa de players -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px;">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text2);">Comparativo de Players</div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead>
+            <tr style="background:var(--bg3);">
+              <th style="padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;">Player</th>
+              <th style="padding:8px 12px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;">Notícias</th>
+              <th style="padding:8px 12px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;">SOV</th>
+              <th style="padding:8px 12px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;">% Pos</th>
+              <th style="padding:8px 12px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;">% Neg</th>
+              <th style="padding:8px 12px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;">Prot.</th>
+              <th style="padding:8px 12px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;">Tier 1</th>
+              <th style="padding:8px 12px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;">RPS</th>
+              <th style="padding:8px 12px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;">AVE</th>
+            </tr>
+          </thead>
+          <tbody>${playerRows}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Volume mensal + Mídia + Temas -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:12px;">📅 Volume Mensal</div>
+        ${monthlyHtml || '<p style="color:var(--text3);font-size:12px;">Sem dados de data</p>'}
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:12px;">📺 Distribuição de Mídia</div>
+        ${midiaHtml || '<p style="color:var(--text3);font-size:12px;">Sem campo Mídia</p>'}
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:12px;">🔖 Top Temas</div>
+        ${temasHtml || '<p style="color:var(--text3);font-size:12px;">Sem campo Temas</p>'}
+      </div>
+    </div>
+  `;
+
+  // Insere após os 5 cards e antes do Escudo de Crise
+  const shieldCard = document.getElementById('shieldCard');
+  if(shieldCard) shieldCard.parentNode.insertBefore(panel, shieldCard);
 }
 
 // Initialize Lucide icons after DOM is ready
