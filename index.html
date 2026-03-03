@@ -2273,9 +2273,12 @@ async function analyzeQuery(question){
       const msg = err.message || '';
       const isHTTP401 = msg.includes('401');
       const isHTTP403 = msg.includes('403');
+      const isHTTP429 = msg.includes('429');
       const isNetwork = msg.toLowerCase().includes('failed to fetch') || msg.toLowerCase().includes('networkerror') || msg.toLowerCase().includes('cors');
 
-      if(isHTTP401 || isHTTP403){
+      if(isHTTP429){
+        showQuotaError(state.selectedLlmName);
+      } else if(isHTTP401 || isHTTP403){
         showApiKeyError(state.selectedLlmName);
       } else if(isNetwork){
         showNetworkError(state.selectedLlmName);
@@ -2304,6 +2307,25 @@ function showEnvWarning(){
 
 function showApiKeyError(name){
   addInlineWarning(`🔑 API Key inválida ou expirada para <strong>${name}</strong>. Verifique em <em>🔑 API Keys</em> e tente novamente.`, 'rgba(252,129,129,.08)', 'rgba(252,129,129,.3)', '#fc8181');
+}
+
+function showQuotaError(name){
+  const links = {
+    'OpenAI GPT-4' : 'https://platform.openai.com/settings/organization/billing',
+    'DeepSeek'     : 'https://platform.deepseek.com/top_up',
+    'Claude'       : 'https://console.anthropic.com/settings/plans',
+    'Grok xAI'     : 'https://console.x.ai/',
+    'Qwen Alibaba' : 'https://dashscope.console.aliyun.com/'
+  };
+  const url = links[name] || '#';
+  addInlineWarning(
+    `💳 <strong>Cota esgotada — ${name}</strong> (HTTP 429)<br>
+    <span style="opacity:.85">Você atingiu o limite de uso ou saldo insuficiente nessa API.<br>
+    👉 <a href="${url}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Verificar plano e cobrança</a> &nbsp;|&nbsp;
+    Ou troque para outro LLM em <em>⚡ Selecionar LLM</em>.<br>
+    <span style="opacity:.65">Usando análise local enquanto isso.</span></span>`,
+    'rgba(252,129,129,.08)', 'rgba(252,129,129,.3)', '#fc8181'
+  );
 }
 
 function showNetworkError(name){
