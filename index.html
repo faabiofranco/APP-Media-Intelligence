@@ -2466,7 +2466,7 @@ INSTRUÇÕES DE ANÁLISE:
 - "Destaque" ou "manchete" = filtrar Espaço=Principal ou Protagonismo=SIM
 - Para dia/horário: agrupar DataVeiculacao por dia da semana
 
-FORMATO DE RESPOSTA: JSON válido sem markdown. Exatamente:
+FORMATO DE RESPOSTA: JSON válido sem markdown e sem backticks em nenhum campo. Use sempre aspas duplas para strings. Exatamente:
 {
   "text": "HTML com <strong>, <br>, <span style='color:#68d391'> para positivo, <span style='color:#fc8181'> para negativo",
   "chartType": "bar|line|doughnut|pie|horizontalBar ou null",
@@ -2488,13 +2488,13 @@ Para múltiplas séries (ex: comparativo), use chartDatasets ao invés de chartV
   if(llm === 'openai'){
     endpoint = 'https://api.openai.com/v1/chat/completions';
     headers  = {'Content-Type':'application/json','Authorization':'Bearer '+apiKey};
-    body     = {model:'gpt-4o-mini',messages:[{role:'system',content:sysPrompt},{role:'user',content:userMsg}],response_format:{type:'json_object'},max_tokens:1200};
+    body     = {model:'gpt-4o-mini',messages:[{role:'system',content:sysPrompt},{role:'user',content:userMsg}],response_format:{type:'json_object'},max_tokens:3000};
   }
   // ── DeepSeek ──────────────────────────────────────────────────────────────
   else if(llm === 'deepseek'){
     endpoint = 'https://api.deepseek.com/v1/chat/completions';
     headers  = {'Content-Type':'application/json','Authorization':'Bearer '+apiKey};
-    body     = {model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userMsg}],max_tokens:1200};
+    body     = {model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userMsg}],max_tokens:3000};
   }
   // ── Claude (Anthropic) ────────────────────────────────────────────────────
   // Requer: anthropic-dangerous-direct-browser-access: true para chamadas browser->API
@@ -2506,19 +2506,19 @@ Para múltiplas séries (ex: comparativo), use chartDatasets ao invés de chartV
       'anthropic-version'                     : '2023-06-01',
       'anthropic-dangerous-direct-browser-access': 'true'   // ← OBRIGATÓRIO para browser
     };
-    body = {model:'claude-sonnet-4-5-20250929',max_tokens:1200,system:sysPrompt,messages:[{role:'user',content:userMsg}]};
+    body = {model:'claude-sonnet-4-5-20250929',max_tokens:3000,system:sysPrompt,messages:[{role:'user',content:userMsg}]};
   }
   // ── Grok (xAI) ────────────────────────────────────────────────────────────
   else if(llm === 'grok'){
     endpoint = 'https://api.x.ai/v1/chat/completions';
     headers  = {'Content-Type':'application/json','Authorization':'Bearer '+apiKey};
-    body     = {model:'grok-3-mini',messages:[{role:'system',content:sysPrompt},{role:'user',content:userMsg}],max_tokens:1200};
+    body     = {model:'grok-3-mini',messages:[{role:'system',content:sysPrompt},{role:'user',content:userMsg}],max_tokens:3000};
   }
   // ── Qwen (Alibaba DashScope) ──────────────────────────────────────────────
   else if(llm === 'qwen'){
     endpoint = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions';
     headers  = {'Content-Type':'application/json','Authorization':'Bearer '+apiKey};
-    body     = {model:'qwen-plus',messages:[{role:'system',content:sysPrompt},{role:'user',content:userMsg}],max_tokens:1200};
+    body     = {model:'qwen-plus',messages:[{role:'system',content:sysPrompt},{role:'user',content:userMsg}],max_tokens:3000};
   }
 
   const resp = await fetch(endpoint, {method:'POST', headers, body:JSON.stringify(body)});
@@ -2540,12 +2540,27 @@ Para múltiplas séries (ex: comparativo), use chartDatasets ao invés de chartV
 
   if(!raw) throw new Error('Resposta vazia da API');
 
-  // Parse JSON — remove blocos markdown se o modelo os incluir
+  // Parse JSON — limpa markdown, backticks, e JSON truncado
   let parsed;
   try{
-    const clean = raw.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
-    const match = clean.match(/\{[\s\S]*\}/);
-    parsed = JSON.parse(match ? match[0] : clean);
+    let clean = raw
+      .replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/```\s*$/,'')  // remove code fences
+      .replace(/:\s*`([^`]*)`/g, ': "$1"')   // `#color` → "#color" em valores
+      .replace(/`([^`\n]{1,80})`/g, '"$1"')  // outros backtick-strings inline
+      .trim();
+
+    // Extrai objeto JSON (pode estar truncado)
+    const match = clean.match(/\{[\s\S]*/);
+    if(match) clean = match[0];
+
+    // Tenta parse direto
+    try {
+      parsed = JSON.parse(clean);
+    } catch(e1) {
+      // JSON truncado: tenta fechar o JSON para recuperar o que foi parseado
+      const fixed = _repairJson(clean);
+      parsed = JSON.parse(fixed);
+    }
   }catch(e){
     // Se não conseguir parsear JSON, retorna o texto bruto como resposta
     return {text: raw.replace(/\n/g,'<br>'), analysis:'', insights:[], chartData:null};
@@ -3995,6 +4010,39 @@ setTimeout(()=>{
   const el=document.getElementById('briefingDate');
   if(el) el.textContent=`${dias[now.getDay()]}, ${now.getDate()} de ${meses[now.getMonth()]} de ${now.getFullYear()}`;
 },100);
+
+
+// ── Tenta reparar JSON truncado fechando strings/arrays/objetos abertos ──────
+function _repairJson(str){
+  // Remove última linha parcial (provavelmente cortada)
+  let s = str.trimEnd();
+
+  // Remove trailing vírgulas antes de fechar
+  s = s.replace(/,\s*$/, '');
+
+  // Conta balanço de chaves/colchetes
+  const stack = [];
+  let inStr = false, escape = false;
+  for(let i=0;i<s.length;i++){
+    const c = s[i];
+    if(escape){ escape=false; continue; }
+    if(c==='\\' && inStr){ escape=true; continue; }
+    if(c==='"' && !escape){ inStr=!inStr; continue; }
+    if(inStr) continue;
+    if(c==='{') stack.push('}');
+    else if(c==='[') stack.push(']');
+    else if(c==='}' || c===']') stack.pop();
+  }
+
+  // Se estava dentro de string, fecha a string
+  if(inStr) s += '"';
+
+  // Remove trailing vírgula e fecha estruturas abertas
+  s = s.replace(/,\s*$/, '');
+  while(stack.length) s += stack.pop();
+
+  return s;
+}
 
 // Initialize Lucide icons after DOM is ready
 function initLucideIcons() {
