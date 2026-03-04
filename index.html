@@ -8,6 +8,7 @@
 <meta name="theme-color" content="#07080f">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
@@ -934,6 +935,67 @@
   }
   .podium-pct { font-size:11px; font-weight:600; color:var(--accent); flex-shrink:0; }
   .podium-crown { font-size:13px; flex-shrink:0; }
+
+  /* ─── MAPA BR ─────────────────────────────────────────────────────────────── */
+  .mapa-page { display:flex; flex-direction:column; gap:16px; padding:20px; height:calc(100vh - 64px); overflow-y:auto; }
+  .mapa-top  { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .mapa-title { font-size:14px; font-weight:600; color:var(--text); flex:1; }
+  .mapa-select {
+    background:var(--bg3); border:1px solid var(--border); color:var(--text);
+    padding:6px 12px; border-radius:6px; font-size:13px; cursor:pointer; min-width:160px;
+  }
+  .mapa-select:focus { outline:none; border-color:var(--accent); }
+  .mapa-body { display:flex; gap:16px; flex:1; min-height:0; }
+  .mapa-svg-wrap {
+    flex:1; background:var(--bg2); border:1px solid var(--border);
+    border-radius:10px; padding:16px; position:relative;
+    min-height:400px; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+  }
+  #mapaSvg { width:100%; height:100%; max-height:520px; }
+  .mapa-sidebar { width:220px; display:flex; flex-direction:column; gap:12px; }
+  .mapa-legenda-card {
+    background:var(--bg2); border:1px solid var(--border);
+    border-radius:10px; padding:16px;
+  }
+  .mapa-legenda-title { font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--text3); font-weight:600; margin-bottom:12px; }
+  .mapa-legenda-bar {
+    height:10px; border-radius:4px;
+    background:linear-gradient(to right, #e8f4fd, #1a6fa8);
+    margin-bottom:6px;
+  }
+  .mapa-legenda-labels { display:flex; justify-content:space-between;
+    font-size:10px; color:var(--text3); }
+  .mapa-ranking-card {
+    background:var(--bg2); border:1px solid var(--border);
+    border-radius:10px; padding:16px; flex:1;
+  }
+  .mapa-ranking-title { font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--text3); font-weight:600; margin-bottom:10px; }
+  .mapa-ranking-item {
+    display:flex; align-items:center; gap:8px; padding:4px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .mapa-ranking-item:last-child { border-bottom:none; }
+  .mapa-rank-pos { font-size:10px; color:var(--text3); width:16px; text-align:center; }
+  .mapa-rank-uf  { font-size:12px; font-weight:700; color:var(--accent); width:24px; }
+  .mapa-rank-name { font-size:11px; color:var(--text2); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .mapa-rank-val { font-size:12px; font-weight:600; color:var(--text); }
+  .mapa-tooltip {
+    position:absolute; pointer-events:none;
+    background:var(--bg4); border:1px solid var(--border);
+    border-radius:8px; padding:10px 14px; font-size:12px; color:var(--text);
+    box-shadow:0 4px 20px rgba(0,0,0,.3);
+    z-index:100; min-width:160px; max-width:220px;
+    transition:opacity .15s;
+  }
+  .mapa-tooltip-title { font-weight:700; margin-bottom:4px; color:var(--accent); }
+  .mapa-no-data { color:var(--text3); font-size:13px; text-align:center; padding:20px; }
+  .state-path { transition:opacity .15s; cursor:pointer; }
+  .state-path:hover { opacity:.75; stroke:var(--text) !important; stroke-width:1.5 !important; }
+  @media(max-width:860px){ .mapa-body{flex-direction:column;} .mapa-sidebar{width:100%;} }
+
   /* Briefing Cards Grid */
   .briefing-cards-grid {
     display:grid;
@@ -1211,6 +1273,10 @@
     <div class="sidebar-nav-item" onclick="showPage('data')" id="nav-data">
       <span class="nav-icon">⊞</span>
       <span class="nav-label">Base de Dados</span>
+    </div>
+    <div class="sidebar-nav-item" onclick="showPage('mapa')" id="nav-mapa">
+      <span class="nav-icon">🗺</span>
+      <span class="nav-label">Mapa BR</span>
     </div>
   </div>
 
@@ -1510,6 +1576,44 @@
   </div>
 
   <!-- PAGE: CHAT -->
+
+  <!-- ═══════════════════════════════════════════ MAPA BR ═════════════════════ -->
+  <div class="page" id="page-mapa">
+    <div class="mapa-page">
+      <div class="mapa-top">
+        <span class="mapa-title">🗺️ Distribuição Geográfica — Brasil</span>
+        <select class="mapa-select" id="mapaMetrica" onchange="renderMapaBrasil()">
+          <option value="noticias">📰 Total de Notícias</option>
+          <option value="positivo">🟢 % Positivo</option>
+          <option value="negativo">🔴 % Negativo</option>
+        </select>
+        <select class="mapa-select" id="mapaPlayer" onchange="renderMapaBrasil()">
+          <option value="">Todos os Players</option>
+        </select>
+      </div>
+      <div class="mapa-body">
+        <div class="mapa-svg-wrap" id="mapaSvgWrap">
+          <div class="mapa-no-data">Importe uma planilha para visualizar o mapa.</div>
+        </div>
+        <div class="mapa-sidebar">
+          <div class="mapa-legenda-card">
+            <div class="mapa-legenda-title">Legenda</div>
+            <div class="mapa-legenda-bar" id="mapaLegendaBar"></div>
+            <div class="mapa-legenda-labels">
+              <span id="mapaLegMin">0</span>
+              <span id="mapaLegMax">—</span>
+            </div>
+            <div style="font-size:10px;color:var(--text3);margin-top:8px;" id="mapaLegLabel">notícias por estado</div>
+          </div>
+          <div class="mapa-ranking-card">
+            <div class="mapa-ranking-title">🏆 Top Estados</div>
+            <div id="mapaRanking"><div class="mapa-no-data">—</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="page" id="page-chat" style="padding-bottom:0;height:calc(100vh - 64px)">
     <div class="chat-layout">
       <div class="chat-main">
@@ -1681,8 +1785,8 @@ function showPage(page){
   if(nav) nav.classList.add('active');
   else document.querySelectorAll('.sidebar-nav-item')[0].classList.add('active');
   state.currentPage = page;
-  const titles = {upload:'Importar Dados',briefing:'Briefing Diário',dashboard:'Dashboard',chat:'Chat IA',alertas:'Alertas Inteligentes',data:'Base de Dados'};
-  const subs = {upload:'Upload da planilha Excel',briefing:'Copiloto estratégico de comunicação',dashboard:'Visão geral e métricas',chat:'Análise em linguagem natural',alertas:'Monitoramento proativo',data:'Tabela de notícias'};
+  const titles = {upload:'Importar Dados',briefing:'Briefing Diário',dashboard:'Dashboard',chat:'Chat IA',alertas:'Alertas Inteligentes',data:'Base de Dados',mapa:'Mapa do Brasil'};
+  const subs = {upload:'Upload da planilha Excel',briefing:'Copiloto estratégico de comunicação',dashboard:'Visão geral e métricas',chat:'Análise em linguagem natural',alertas:'Monitoramento proativo',data:'Tabela de notícias',mapa:'Distribuição geográfica de notícias por estado'};
   document.getElementById('pageTitle').textContent = titles[page]||page;
   document.getElementById('pageBreadcrumb').textContent = '↗ '+subs[page];
   if(page==='dashboard' && state.rawData.length) renderDashboard();
@@ -1691,6 +1795,7 @@ function showPage(page){
   if(page==='briefing' && state.rawData.length) renderBriefing();
   if(page==='alertas') renderAlertas();
   if(page==='upload' && state.rawData.length) renderPlayerCards();
+  if(page==='mapa' && state.rawData.length) renderMapaBrasil();
 }
 
 // ─── FILE HANDLING ────────────────────────────────────────────────────────────
@@ -1798,9 +1903,26 @@ function getUniqueValues(field){
 
 // ─── FIELD RESOLVERS ──────────────────────────────────────────────────────────
 function resolveField(name){
-  const lname=name.toLowerCase();
-  return state.headers.find(h=>h.toLowerCase()===lname)||
-    state.headers.find(h=>h.toLowerCase().includes(lname))||null;
+  // Mapeamento explícito: lógica → nomes possíveis na planilha
+  const ALIASES = {
+    'uf'            : ['uf','veiculocodigoestado','siglaestado','uf_estado','estado_uf','cod_estado'],
+    'estado'        : ['estado','veiculoestado','nome_estado','state','estado_veiculo'],
+    'cidade'        : ['cidade','veiculocidade','city','municipio','cidade_veiculo'],
+    'pais'          : ['pais','país','veiculopais','country','pais_veiculo'],
+    'codigopais'    : ['codigopais','codigo pais','veiculocodigopais','cod_pais','codpais'],
+  };
+  const lname = name.toLowerCase().replace(/[\s_-]/g,'');
+  // Verifica aliases primeiro
+  const aliasKeys = ALIASES[lname];
+  if(aliasKeys){
+    for(const alias of aliasKeys){
+      const found = state.headers.find(h=>h.toLowerCase().replace(/[\s_-]/g,'')===alias);
+      if(found) return found;
+    }
+  }
+  // Fallback: busca exata, depois parcial
+  return state.headers.find(h=>h.toLowerCase()===name.toLowerCase())||
+    state.headers.find(h=>h.toLowerCase().includes(name.toLowerCase()))||null;
 }
 function getVal(row,name){
   const f=resolveField(name);
@@ -4288,6 +4410,240 @@ function renderAnalystPanel() {
   const shieldCard = document.getElementById('shieldCard');
   if(shieldCard) shieldCard.parentNode.insertBefore(panel, shieldCard);
 }
+
+
+// ─── MAPA BR ─────────────────────────────────────────────────────────────────
+
+const IBGE_STATES = {
+  '11':{uf:'RO',nome:'Rondônia'},      '12':{uf:'AC',nome:'Acre'},
+  '13':{uf:'AM',nome:'Amazonas'},      '14':{uf:'RR',nome:'Roraima'},
+  '15':{uf:'PA',nome:'Pará'},          '16':{uf:'AP',nome:'Amapá'},
+  '17':{uf:'TO',nome:'Tocantins'},     '21':{uf:'MA',nome:'Maranhão'},
+  '22':{uf:'PI',nome:'Piauí'},         '23':{uf:'CE',nome:'Ceará'},
+  '24':{uf:'RN',nome:'Rio Grande do Norte'}, '25':{uf:'PB',nome:'Paraíba'},
+  '26':{uf:'PE',nome:'Pernambuco'},    '27':{uf:'AL',nome:'Alagoas'},
+  '28':{uf:'SE',nome:'Sergipe'},       '29':{uf:'BA',nome:'Bahia'},
+  '31':{uf:'MG',nome:'Minas Gerais'},  '32':{uf:'ES',nome:'Espírito Santo'},
+  '33':{uf:'RJ',nome:'Rio de Janeiro'},'35':{uf:'SP',nome:'São Paulo'},
+  '41':{uf:'PR',nome:'Paraná'},        '42':{uf:'SC',nome:'Santa Catarina'},
+  '43':{uf:'RS',nome:'Rio Grande do Sul'}, '50':{uf:'MS',nome:'Mato Grosso do Sul'},
+  '51':{uf:'MT',nome:'Mato Grosso'},   '52':{uf:'GO',nome:'Goiás'},
+  '53':{uf:'DF',nome:'Distrito Federal'}
+};
+
+// Normaliza qualquer valor de UF/Estado para a sigla de 2 letras
+function normalizeUF(val){
+  if(!val) return null;
+  const s = String(val).trim();
+  // 2 letras: pode ser UF direto
+  if(s.length===2){
+    const up = s.toUpperCase();
+    if(Object.values(IBGE_STATES).find(x=>x.uf===up)) return up;
+  }
+  // Tenta match por nome completo (sem acento, case-insensitive)
+  const norm = s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const found = Object.values(IBGE_STATES).find(x=>
+    x.nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'') === norm
+  );
+  return found ? found.uf : null;
+}
+
+// Cache do GeoJSON para não re-buscar
+let _brasilGeoJson = null;
+
+async function renderMapaBrasil(){
+  const wrap = document.getElementById('mapaSvgWrap');
+  if(!wrap) return;
+
+  // Popula select de players
+  const mapaPlayerSel = document.getElementById('mapaPlayer');
+  if(mapaPlayerSel && mapaPlayerSel.options.length === 1){
+    getUniqueValues('Player').forEach(p=>{
+      const o=document.createElement('option'); o.value=p; o.textContent=p;
+      mapaPlayerSel.appendChild(o);
+    });
+  }
+
+  if(!state.rawData.length){
+    wrap.innerHTML='<div class="mapa-no-data">Importe uma planilha para visualizar o mapa.</div>';
+    return;
+  }
+
+  wrap.innerHTML='<div class="mapa-no-data">⏳ Carregando mapa do Brasil...</div>';
+
+  // ── Agrupa dados por UF ─────────────────────────────────────────────────────
+  const metrica  = document.getElementById('mapaMetrica')?.value || 'noticias';
+  const playerF  = document.getElementById('mapaPlayer')?.value  || '';
+  const data     = playerF ? state.rawData.filter(r=>getVal(r,'Player')===playerF) : state.rawData;
+
+  const ufData = {};
+  data.forEach(r=>{
+    const uf = normalizeUF(
+      getVal(r,'UF') || getVal(r,'Estado') || getVal(r,'VeiculoCodigoEstado') || getVal(r,'VeiculoEstado')
+    );
+    if(!uf) return;
+    if(!ufData[uf]) ufData[uf] = {total:0, pos:0, neg:0};
+    ufData[uf].total++;
+    const sent = (getVal(r,'Sentimento')||'').toLowerCase();
+    if(sent.includes('pos')) ufData[uf].pos++;
+    if(sent.includes('neg')) ufData[uf].neg++;
+  });
+
+  // ── Calcula valor por estado conforme métrica ──────────────────────────────
+  const ufValues = {};
+  Object.entries(ufData).forEach(([uf,d])=>{
+    if(metrica==='noticias')  ufValues[uf] = d.total;
+    else if(metrica==='positivo') ufValues[uf] = d.total > 0 ? Math.round(d.pos/d.total*100) : 0;
+    else if(metrica==='negativo') ufValues[uf] = d.total > 0 ? Math.round(d.neg/d.total*100) : 0;
+  });
+
+  const maxVal = Math.max(...Object.values(ufValues), 1);
+
+  // ── Busca GeoJSON IBGE (com cache) ─────────────────────────────────────────
+  if(!_brasilGeoJson){
+    try{
+      const resp = await fetch(
+        'https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?resolucao=3&formato=application/vnd.geo%2Bjson'
+      );
+      if(!resp.ok) throw new Error('HTTP '+resp.status);
+      _brasilGeoJson = await resp.json();
+    }catch(e){
+      wrap.innerHTML=`<div class="mapa-no-data">🌐 Não foi possível carregar o mapa.<br><small>Verifique sua conexão com a internet.</small><br><br><span style="font-size:11px;color:var(--text3);">Erro: ${e.message}</span></div>`;
+      return;
+    }
+  }
+
+  // ── Renderiza D3 ────────────────────────────────────────────────────────────
+  wrap.innerHTML = '';
+  const W = wrap.clientWidth  || 560;
+  const H = Math.min(Math.round(W * 0.78), 520);
+
+  // Cor: azul para notícias, verde para positivo, vermelho para negativo
+  const colorInterpolator =
+    metrica === 'positivo' ? d3.interpolateGreens :
+    metrica === 'negativo' ? d3.interpolateReds   : d3.interpolateBlues;
+
+  const colorScale = d3.scaleSequential(colorInterpolator).domain([0, maxVal]);
+  const emptyColor = getComputedStyle(document.documentElement).getPropertyValue('--bg3').trim() || '#2a2f3a';
+
+  const svg = d3.select(wrap)
+    .append('svg')
+    .attr('id','mapaSvg')
+    .attr('viewBox', `0 0 ${W} ${H}`)
+    .attr('preserveAspectRatio','xMidYMid meet')
+    .style('width','100%')
+    .style('height',H+'px');
+
+  const projection = d3.geoMercator()
+    .fitExtent([[10,10],[W-10,H-10]], _brasilGeoJson);
+  const path = d3.geoPath().projection(projection);
+
+  // Tooltip
+  const tooltip = d3.select(wrap)
+    .append('div')
+    .attr('class','mapa-tooltip')
+    .style('opacity',0)
+    .style('display','none');
+
+  svg.selectAll('.state-path')
+    .data(_brasilGeoJson.features)
+    .enter()
+    .append('path')
+    .attr('class','state-path')
+    .attr('d', path)
+    .attr('fill', d=>{
+      const info = IBGE_STATES[d.properties.codarea];
+      if(!info) return emptyColor;
+      const v = ufValues[info.uf];
+      return (v !== undefined && v > 0) ? colorScale(v) : emptyColor;
+    })
+    .attr('stroke','var(--border)')
+    .attr('stroke-width','0.6')
+    .on('mouseover', function(event, d){
+      const info = IBGE_STATES[d.properties.codarea];
+      if(!info){ tooltip.style('opacity',0).style('display','none'); return; }
+      const v    = ufValues[info.uf] || 0;
+      const dtot = ufData[info.uf]?.total || 0;
+      const dpos = ufData[info.uf]?.pos   || 0;
+      const dneg = ufData[info.uf]?.neg   || 0;
+      const metLabel = metrica==='noticias'?'Notícias':metrica==='positivo'?'% Positivo':'% Negativo';
+      tooltip.html(`
+        <div class="mapa-tooltip-title">${info.uf} — ${info.nome}</div>
+        <div><strong>${metLabel}:</strong> ${v}${metrica!=='noticias'?'%':''}</div>
+        ${metrica!=='noticias'?`<div style="font-size:11px;color:var(--text3);">Total: ${dtot} notícias</div>`:''}
+        ${dtot>0?`<div style="font-size:11px;color:var(--text3);">🟢 ${dpos} pos · 🔴 ${dneg} neg</div>`:''}
+      `)
+      .style('opacity',1).style('display','block');
+      d3.select(this).attr('stroke','var(--accent)').attr('stroke-width','1.5');
+    })
+    .on('mousemove', function(event){
+      const [mx,my] = d3.pointer(event, wrap);
+      const ttW = 200, ttH = 90;
+      const left = mx + 16 + ttW > W ? mx - ttW - 8 : mx + 16;
+      const top  = my + ttH > H     ? my - ttH      : my + 4;
+      tooltip.style('left', left+'px').style('top', top+'px');
+    })
+    .on('mouseout', function(){
+      tooltip.style('opacity',0).style('display','none');
+      d3.select(this).attr('stroke','var(--border)').attr('stroke-width','0.6');
+    });
+
+  // Labels de UF no centro dos estados
+  svg.selectAll('.state-label')
+    .data(_brasilGeoJson.features.filter(d=>IBGE_STATES[d.properties.codarea]))
+    .enter()
+    .append('text')
+    .attr('class','state-label')
+    .attr('x', d=>path.centroid(d)[0])
+    .attr('y', d=>path.centroid(d)[1])
+    .attr('text-anchor','middle')
+    .attr('dominant-baseline','central')
+    .attr('font-size','8px')
+    .attr('font-weight','600')
+    .attr('fill', d=>{
+      const info = IBGE_STATES[d.properties.codarea];
+      const v = ufValues[info.uf] || 0;
+      return v > maxVal*0.5 ? '#fff' : 'var(--text2)';
+    })
+    .attr('pointer-events','none')
+    .text(d => IBGE_STATES[d.properties.codarea].uf);
+
+  // ── Legenda ────────────────────────────────────────────────────────────────
+  const legMin = document.getElementById('mapaLegMin');
+  const legMax = document.getElementById('mapaLegMax');
+  const legLab = document.getElementById('mapaLegLabel');
+  const legBar = document.getElementById('mapaLegendaBar');
+  if(legMin) legMin.textContent = '0';
+  if(legMax) legMax.textContent = maxVal + (metrica!=='noticias'?'%':'');
+  if(legLab) legLab.textContent = metrica==='noticias'?'notícias por estado':metrica==='positivo'?'% positivo por estado':'% negativo por estado';
+  if(legBar){
+    const c1 = colorScale(0);
+    const c2 = colorScale(maxVal);
+    legBar.style.background = `linear-gradient(to right, ${c1}, ${c2})`;
+  }
+
+  // ── Ranking Top 10 ─────────────────────────────────────────────────────────
+  const rankDiv = document.getElementById('mapaRanking');
+  if(rankDiv){
+    const sorted = Object.entries(ufValues)
+      .sort((a,b)=>b[1]-a[1]).slice(0,10);
+    if(!sorted.length){
+      rankDiv.innerHTML='<div class="mapa-no-data">Sem dados de UF</div>';
+    } else {
+      const stateByUF = {};
+      Object.values(IBGE_STATES).forEach(s=>stateByUF[s.uf]=s.nome);
+      rankDiv.innerHTML = sorted.map(([uf,v],i)=>`
+        <div class="mapa-ranking-item">
+          <span class="mapa-rank-pos">${i+1}</span>
+          <span class="mapa-rank-uf">${uf}</span>
+          <span class="mapa-rank-name" title="${stateByUF[uf]||''}">${stateByUF[uf]||uf}</span>
+          <span class="mapa-rank-val">${v}${metrica!=='noticias'?'%':''}</span>
+        </div>
+      `).join('');
+    }
+  }
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 // Initialize Lucide icons after DOM is ready
 function initLucideIcons() {
